@@ -9,6 +9,26 @@ $stmt->execute([$id, $gv_id]);
 $lop = $stmt->fetch();
 if (!$lop) { set_flash('error', 'Không tìm thấy lớp hoặc bạn không phụ trách lớp này.'); redirect('/giangvien/dashboard.php'); }
 
+// Cập nhật điều kiện nhóm & thời hạn (giảng viên được sửa cho lớp mình phụ trách)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_settings') {
+    csrf_check();
+    $si_min = (int)$_POST['si_so_nhom_toi_thieu'];
+    $si_max = (int)$_POST['si_so_nhom_toi_da'];
+    $han_nhom = $_POST['han_dang_ky_nhom'] !== '' ? $_POST['han_dang_ky_nhom'] : null;
+    $han_detai = $_POST['han_dang_ky_detai'] !== '' ? $_POST['han_dang_ky_detai'] : null;
+
+    if ($si_min < 1 || $si_max < $si_min) {
+        set_flash('error', 'Sĩ số nhóm không hợp lệ (tối đa phải ≥ tối thiểu).');
+        redirect('/giangvien/lop.php?id=' . $id);
+    }
+
+    $pdo->prepare('UPDATE lop_hocphan SET si_so_nhom_toi_thieu=?, si_so_nhom_toi_da=?, han_dang_ky_nhom=?, han_dang_ky_detai=? WHERE id=?')
+        ->execute([$si_min, $si_max, $han_nhom, $han_detai, $id]);
+
+    set_flash('success', 'Đã cập nhật điều kiện nhóm và thời hạn của lớp.');
+    redirect('/giangvien/lop.php?id=' . $id);
+}
+
 // Gán đề tài có sẵn (từ ngân hàng) vào lớp này
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'gan_detai') {
     csrf_check();
@@ -152,7 +172,10 @@ include __DIR__ . '/../includes/header.php';
     <span class="font-mono text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded"><?= e($lop['ma_lop']) ?></span>
     <h1 class="text-xl font-bold text-slate-800"><?= e($lop['ten_lop']) ?></h1>
   </div>
-  <a href="<?= BASE_URL ?>/giangvien/duyet_dangky.php?lop_id=<?= $id ?>" class="text-sm bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg">🔍 Duyệt đăng ký đề tài</a>
+  <div class="flex gap-2">
+    <button onclick="document.getElementById('modalSettings').classList.remove('hidden')" class="text-sm bg-white border border-slate-300 hover:border-brand-400 text-slate-700 px-4 py-2 rounded-lg">✎ Sửa điều kiện & thời hạn</button>
+    <a href="<?= BASE_URL ?>/giangvien/duyet_dangky.php?lop_id=<?= $id ?>" class="text-sm bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg">🔍 Duyệt đăng ký đề tài</a>
+  </div>
 </div>
 
 <div class="grid md:grid-cols-3 gap-4 mb-6 text-sm">
@@ -216,6 +239,44 @@ include __DIR__ . '/../includes/header.php';
   </div>
   <?php endforeach; ?>
   <?php if (!$nhoms): ?><div class="text-center text-slate-400 py-12">Lớp chưa có nhóm nào.</div><?php endif; ?>
+</div>
+
+<!-- Modal sửa điều kiện & thời hạn -->
+<div id="modalSettings" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-40">
+  <div class="bg-white rounded-xl p-6 w-full max-w-md">
+    <h2 class="font-bold text-slate-800 mb-1">Sửa điều kiện nhóm & thời hạn</h2>
+    <p class="text-xs text-slate-500 mb-4">Áp dụng cho lớp <?= e($lop['ma_lop']) ?>. Thay đổi sĩ số sẽ chỉ ảnh hưởng đến các nhóm được tạo/mời thêm sau thời điểm lưu.</p>
+    <form method="post" class="space-y-3">
+      <?= csrf_field() ?>
+      <input type="hidden" name="action" value="update_settings">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Số TV tối thiểu/nhóm</label>
+          <input name="si_so_nhom_toi_thieu" type="number" min="1" value="<?= (int)$lop['si_so_nhom_toi_thieu'] ?>" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Số TV tối đa/nhóm</label>
+          <input name="si_so_nhom_toi_da" type="number" min="1" value="<?= (int)$lop['si_so_nhom_toi_da'] ?>" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+        </div>
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Hạn đăng ký nhóm</label>
+        <input name="han_dang_ky_nhom" type="datetime-local"
+          value="<?= $lop['han_dang_ky_nhom'] ? date('Y-m-d\TH:i', strtotime($lop['han_dang_ky_nhom'])) : '' ?>"
+          class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Hạn đăng ký đề tài</label>
+        <input name="han_dang_ky_detai" type="datetime-local"
+          value="<?= $lop['han_dang_ky_detai'] ? date('Y-m-d\TH:i', strtotime($lop['han_dang_ky_detai'])) : '' ?>"
+          class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="document.getElementById('modalSettings').classList.add('hidden')" class="px-4 py-2 text-sm rounded-lg text-slate-500 hover:bg-slate-100">Huỷ</button>
+        <button class="px-4 py-2 text-sm rounded-lg bg-brand-600 hover:bg-brand-700 text-white">Lưu thay đổi</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <?php include __DIR__ . '/../includes/footer.php'; ?>

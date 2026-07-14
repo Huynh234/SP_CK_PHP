@@ -8,6 +8,28 @@ $stmt->execute([$id]);
 $lop = $stmt->fetch();
 if (!$lop) { set_flash('error', 'Không tìm thấy lớp học phần.'); redirect('/admin/lop.php'); }
 
+// Cập nhật thông tin & điều kiện lớp (sĩ số nhóm, hạn đăng ký...)
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_settings') {
+    csrf_check();
+    $ten_lop = trim($_POST['ten_lop']);
+    $hoc_ky = trim($_POST['hoc_ky']);
+    $si_min = (int)$_POST['si_so_nhom_toi_thieu'];
+    $si_max = (int)$_POST['si_so_nhom_toi_da'];
+    $han_nhom = $_POST['han_dang_ky_nhom'] !== '' ? $_POST['han_dang_ky_nhom'] : null;
+    $han_detai = $_POST['han_dang_ky_detai'] !== '' ? $_POST['han_dang_ky_detai'] : null;
+
+    if ($ten_lop === '' || $si_min < 1 || $si_max < $si_min) {
+        set_flash('error', 'Vui lòng kiểm tra lại tên lớp và sĩ số nhóm (tối đa phải ≥ tối thiểu).');
+        redirect('/admin/lop_detail.php?id=' . $id);
+    }
+
+    $pdo->prepare('UPDATE lop_hocphan SET ten_lop=?, hoc_ky=?, si_so_nhom_toi_thieu=?, si_so_nhom_toi_da=?, han_dang_ky_nhom=?, han_dang_ky_detai=? WHERE id=?')
+        ->execute([$ten_lop, $hoc_ky, $si_min, $si_max, $han_nhom, $han_detai, $id]);
+
+    set_flash('success', 'Đã cập nhật thông tin lớp học phần.');
+    redirect('/admin/lop_detail.php?id=' . $id);
+}
+
 // Gán / đổi giảng viên
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'set_gv') {
     csrf_check();
@@ -112,6 +134,45 @@ include __DIR__ . '/../includes/header.php';
   </div>
 
   <div class="space-y-6">
+    <div class="bg-white border border-slate-200 rounded-xl p-5">
+      <h2 class="font-semibold text-slate-800 mb-3 text-sm">Thông tin & điều kiện lớp</h2>
+      <form method="post" class="space-y-3">
+        <?= csrf_field() ?>
+        <input type="hidden" name="action" value="update_settings">
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Tên lớp *</label>
+          <input name="ten_lop" required value="<?= e($lop['ten_lop']) ?>" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Học kỳ</label>
+          <input name="hoc_ky" value="<?= e($lop['hoc_ky']) ?>" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Số TV tối thiểu/nhóm</label>
+            <input name="si_so_nhom_toi_thieu" type="number" min="1" value="<?= (int)$lop['si_so_nhom_toi_thieu'] ?>" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-600 mb-1">Số TV tối đa/nhóm</label>
+            <input name="si_so_nhom_toi_da" type="number" min="1" value="<?= (int)$lop['si_so_nhom_toi_da'] ?>" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+          </div>
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Hạn đăng ký nhóm</label>
+          <input name="han_dang_ky_nhom" type="datetime-local"
+            value="<?= $lop['han_dang_ky_nhom'] ? date('Y-m-d\TH:i', strtotime($lop['han_dang_ky_nhom'])) : '' ?>"
+            class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Hạn đăng ký đề tài</label>
+          <input name="han_dang_ky_detai" type="datetime-local"
+            value="<?= $lop['han_dang_ky_detai'] ? date('Y-m-d\TH:i', strtotime($lop['han_dang_ky_detai'])) : '' ?>"
+            class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <button class="w-full bg-brand-600 hover:bg-brand-700 text-white text-sm px-3 py-2 rounded-lg">Lưu thay đổi</button>
+      </form>
+    </div>
+
     <div class="bg-white border border-slate-200 rounded-xl p-5">
       <h2 class="font-semibold text-slate-800 mb-3 text-sm">Giảng viên phụ trách</h2>
       <form method="post" class="flex gap-2">
