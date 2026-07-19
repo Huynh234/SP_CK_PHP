@@ -17,8 +17,7 @@ try {
     $mysqli = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
     $mysqli->set_charset('utf8mb4');
 } catch (mysqli_sql_exception $e) {
-    die('Lỗi kết nối CSDL: ' . htmlspecialchars($e->getMessage()) .
-        '<br>Hãy kiểm tra XAMPP (Apache + MySQL) đã bật, đã import file database/schema.sql, và PHP đang dùng là bản >= 8.1.');
+    die('Lỗi kết nối CSDL: ' . htmlspecialchars($e->getMessage()));
 }
 
 /**
