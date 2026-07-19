@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 require_role('giangvien');
 
 $gv_id = $_SESSION['user_id'];
-$stmt = $pdo->prepare("
+$lops = db_query("
     SELECT l.*, h.ma_hp, h.ten_hp,
         (SELECT COUNT(*) FROM lop_sinhvien ls WHERE ls.lop_id=l.id) AS so_sv,
         (SELECT COUNT(*) FROM nhom n WHERE n.lop_id=l.id) AS so_nhom
@@ -11,9 +11,7 @@ $stmt = $pdo->prepare("
     JOIN hocphan h ON h.id = l.hocphan_id
     WHERE l.giangvien_id = ?
     ORDER BY l.created_at DESC
-");
-$stmt->execute([$gv_id]);
-$lops = $stmt->fetchAll();
+", [$gv_id]);
 
 $page_title = 'Lớp của tôi';
 include __DIR__ . '/../includes/header.php';
@@ -34,8 +32,7 @@ include __DIR__ . '/../includes/header.php';
       <span>🧩 <?= $l['so_nhom'] ?> nhóm</span>
     </div>
     <div class="text-xs text-slate-400 mt-2">
-      Hạn ĐK nhóm: <?= format_datetime($l['han_dang_ky_nhom']) ?><br>
-      Hạn ĐK đề tài: <?= format_datetime($l['han_dang_ky_detai']) ?>
+      Hạn ĐK nhóm: <?= format_datetime($l['han_dang_ky_nhom']) ?>
     </div>
   </a>
   <?php endforeach; ?>

@@ -24,9 +24,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $loi = [];
     $header_skipped = false;
 
-    $insert = $pdo->prepare('INSERT INTO users (username, password, ho_ten, email, mssv_mgv, role) VALUES (?,?,?,?,?,?)');
-    $check  = $pdo->prepare('SELECT id FROM users WHERE username = ?');
-
     while (($row = fgetcsv($handle, 0, ',')) !== false) {
         $so_dong++;
         if (count($row) < 2) continue;
@@ -49,14 +46,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $loi[] = "Dòng {$so_dong}: thiếu username hoặc họ tên.";
             continue;
         }
-        $check->execute([$username]);
-        if ($check->fetch()) {
+        if (db_query_one('SELECT id FROM users WHERE username = ?', [$username])) {
             $loi[] = "Dòng {$so_dong}: tài khoản '{$username}' đã tồn tại, bỏ qua.";
             continue;
         }
 
         $password = random_password();
-        $insert->execute([$username, password_hash($password, PASSWORD_BCRYPT), $ho_ten, $email, $mssv, $role]);
+        db_exec('INSERT INTO users (username, password, ho_ten, email, mssv_mgv, role) VALUES (?,?,?,?,?,?)',
+            [$username, password_hash($password, PASSWORD_BCRYPT), $ho_ten, $email, $mssv, $role]);
         $ok++;
     }
     fclose($handle);

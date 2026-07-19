@@ -2,10 +2,10 @@
 require_once __DIR__ . '/../includes/bootstrap.php';
 require_role('admin');
 
-$soGV   = $pdo->query("SELECT COUNT(*) c FROM users WHERE role='giangvien'")->fetch()['c'];
-$soSV   = $pdo->query("SELECT COUNT(*) c FROM users WHERE role='sinhvien'")->fetch()['c'];
-$soLop  = $pdo->query("SELECT COUNT(*) c FROM lop_hocphan")->fetch()['c'];
-$soHP   = $pdo->query("SELECT COUNT(*) c FROM hocphan")->fetch()['c'];
+$soGV  = db_value("SELECT COUNT(*) FROM users WHERE role='giangvien'");
+$soSV  = db_value("SELECT COUNT(*) FROM users WHERE role='sinhvien'");
+$soLop = db_value("SELECT COUNT(*) FROM lop_hocphan");
+$soHP  = db_value("SELECT COUNT(*) FROM hocphan");
 
 $page_title = 'Tổng quan';
 include __DIR__ . '/../includes/header.php';

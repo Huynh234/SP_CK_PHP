@@ -12,18 +12,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
     $si_min = (int)$_POST['si_so_nhom_toi_thieu'];
     $si_max = (int)$_POST['si_so_nhom_toi_da'];
     $han_nhom = $_POST['han_dang_ky_nhom'] !== '' ? $_POST['han_dang_ky_nhom'] : null;
-    $han_detai = $_POST['han_dang_ky_detai'] !== '' ? $_POST['han_dang_ky_detai'] : null;
 
     if ($ma === '' || $ten === '' || !$hp_id) {
         set_flash('error', 'Vui lòng nhập đủ thông tin bắt buộc.');
         redirect('/admin/lop.php');
     }
     try {
-        $stmt = $pdo->prepare('INSERT INTO lop_hocphan (ma_lop, ten_lop, hocphan_id, giangvien_id, hoc_ky, si_so_nhom_toi_thieu, si_so_nhom_toi_da, han_dang_ky_nhom, han_dang_ky_detai)
-            VALUES (?,?,?,?,?,?,?,?,?)');
-        $stmt->execute([$ma, $ten, $hp_id, $gv_id, $hoc_ky, $si_min ?: 2, $si_max ?: 5, $han_nhom, $han_detai]);
+        db_exec('INSERT INTO lop_hocphan (ma_lop, ten_lop, hocphan_id, giangvien_id, hoc_ky, si_so_nhom_toi_thieu, si_so_nhom_toi_da, han_dang_ky_nhom)
+            VALUES (?,?,?,?,?,?,?,?)',
+            [$ma, $ten, $hp_id, $gv_id, $hoc_ky, $si_min ?: 2, $si_max ?: 5, $han_nhom]);
         set_flash('success', 'Đã tạo lớp học phần.');
-    } catch (PDOException $e) {
+    } catch (mysqli_sql_exception $e) {
         set_flash('error', 'Mã lớp đã tồn tại.');
     }
     redirect('/admin/lop.php');
@@ -31,22 +30,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
     csrf_check();
-    $pdo->prepare('DELETE FROM lop_hocphan WHERE id=?')->execute([(int)$_POST['id']]);
+    db_exec('DELETE FROM lop_hocphan WHERE id=?', [(int)$_POST['id']]);
     set_flash('success', 'Đã xoá lớp học phần.');
     redirect('/admin/lop.php');
 }
 
-$hocphans = $pdo->query('SELECT * FROM hocphan ORDER BY ma_hp')->fetchAll();
-$giangviens = $pdo->query("SELECT * FROM users WHERE role='giangvien' ORDER BY ho_ten")->fetchAll();
+$hocphans = db_query('SELECT * FROM hocphan ORDER BY ma_hp');
+$giangviens = db_query("SELECT * FROM users WHERE role='giangvien' ORDER BY ho_ten");
 
-$list = $pdo->query("
+$list = db_query("
     SELECT l.*, h.ma_hp, h.ten_hp, u.ho_ten AS ten_gv,
         (SELECT COUNT(*) FROM lop_sinhvien ls WHERE ls.lop_id = l.id) AS so_sv
     FROM lop_hocphan l
     JOIN hocphan h ON h.id = l.hocphan_id
     LEFT JOIN users u ON u.id = l.giangvien_id
     ORDER BY l.created_at DESC
-")->fetchAll();
+");
 
 $page_title = 'Lớp học phần';
 include __DIR__ . '/../includes/header.php';
@@ -69,7 +68,7 @@ include __DIR__ . '/../includes/header.php';
         GV: <?= e($l['ten_gv'] ?: 'Chưa gán') ?> · <?= $l['so_sv'] ?> sinh viên
       </div>
       <div class="text-xs text-slate-400 mt-1">
-        Hạn ĐK nhóm: <?= format_datetime($l['han_dang_ky_nhom']) ?> · Hạn ĐK đề tài: <?= format_datetime($l['han_dang_ky_detai']) ?>
+        Hạn ĐK nhóm: <?= format_datetime($l['han_dang_ky_nhom']) ?> · Sĩ số nhóm: <?= $l['si_so_nhom_toi_thieu'] ?>–<?= $l['si_so_nhom_toi_da'] ?>
       </div>
     </div>
     <div class="flex items-center gap-2">
@@ -137,16 +136,11 @@ include __DIR__ . '/../includes/header.php';
           <input name="si_so_nhom_toi_da" type="number" min="1" value="5" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div>
-          <label class="block text-xs font-medium text-slate-600 mb-1">Hạn đăng ký nhóm</label>
-          <input name="han_dang_ky_nhom" type="datetime-local" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-        </div>
-        <div>
-          <label class="block text-xs font-medium text-slate-600 mb-1">Hạn đăng ký đề tài</label>
-          <input name="han_dang_ky_detai" type="datetime-local" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-        </div>
+      <div>
+        <label class="block text-xs font-medium text-slate-600 mb-1">Hạn đăng ký nhóm</label>
+        <input name="han_dang_ky_nhom" type="datetime-local" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
       </div>
+      <p class="text-xs text-slate-400">Đợt đăng ký đề tài (VD: Giữa kỳ, Cuối kỳ) sẽ được tạo riêng sau, ở trang chi tiết lớp hoặc bởi giảng viên phụ trách.</p>
       <div class="flex justify-end gap-2 pt-2">
         <button type="button" onclick="document.getElementById('modalAdd').classList.add('hidden')" class="px-4 py-2 text-sm rounded-lg text-slate-500 hover:bg-slate-100">Huỷ</button>
         <button class="px-4 py-2 text-sm rounded-lg bg-brand-600 hover:bg-brand-700 text-white">Tạo lớp</button>

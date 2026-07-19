@@ -12,9 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
         redirect('/admin/hocphan.php');
     }
     try {
-        $pdo->prepare('INSERT INTO hocphan (ma_hp, ten_hp, so_tin_chi) VALUES (?,?,?)')->execute([$ma, $ten, $tc ?: 3]);
+        db_exec('INSERT INTO hocphan (ma_hp, ten_hp, so_tin_chi) VALUES (?,?,?)', [$ma, $ten, $tc ?: 3]);
         set_flash('success', 'Đã thêm học phần.');
-    } catch (PDOException $e) {
+    } catch (mysqli_sql_exception $e) {
         set_flash('error', 'Mã học phần đã tồn tại.');
     }
     redirect('/admin/hocphan.php');
@@ -22,12 +22,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
     csrf_check();
-    $pdo->prepare('DELETE FROM hocphan WHERE id=?')->execute([(int)$_POST['id']]);
+    db_exec('DELETE FROM hocphan WHERE id=?', [(int)$_POST['id']]);
     set_flash('success', 'Đã xoá học phần.');
     redirect('/admin/hocphan.php');
 }
 
-$list = $pdo->query('SELECT * FROM hocphan ORDER BY ma_hp')->fetchAll();
+$list = db_query('SELECT * FROM hocphan ORDER BY ma_hp');
 
 $page_title = 'Học phần';
 include __DIR__ . '/../includes/header.php';

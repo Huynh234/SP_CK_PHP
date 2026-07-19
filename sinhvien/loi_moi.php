@@ -8,41 +8,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $tv_id = (int)$_POST['tv_id'];
     $action = $_POST['action'];
 
-    $row = $pdo->prepare("
+    $row = db_query_one("
         SELECT tv.*, n.lop_id FROM thanhvien_nhom tv JOIN nhom n ON n.id=tv.nhom_id
         WHERE tv.id=? AND tv.sinhvien_id=? AND tv.trang_thai='cho_xac_nhan'
-    ");
-    $row->execute([$tv_id, $sv_id]);
-    $row = $row->fetch();
+    ", [$tv_id, $sv_id]);
 
     if ($row) {
         if ($action === 'chap_nhan') {
-            // Kiểm tra chưa có nhóm đã xác nhận nào khác trong lớp
-            $daCo = $pdo->prepare("
+            $daCo = db_query_one("
                 SELECT tv2.id FROM thanhvien_nhom tv2 JOIN nhom n2 ON n2.id=tv2.nhom_id
                 WHERE tv2.sinhvien_id=? AND tv2.trang_thai='da_xac_nhan' AND n2.lop_id=?
-            ");
-            $daCo->execute([$sv_id, $row['lop_id']]);
-            if ($daCo->fetch()) {
+            ", [$sv_id, $row['lop_id']]);
+            if ($daCo) {
                 set_flash('error', 'Bạn đã có nhóm khác trong lớp này rồi, không thể tham gia thêm.');
             } else {
-                $pdo->prepare("UPDATE thanhvien_nhom SET trang_thai='da_xac_nhan' WHERE id=?")->execute([$tv_id]);
+                db_exec("UPDATE thanhvien_nhom SET trang_thai='da_xac_nhan' WHERE id=?", [$tv_id]);
                 // Tự động huỷ các lời mời khác đang chờ trong cùng lớp
-                $pdo->prepare("
+                db_exec("
                     DELETE tv3 FROM thanhvien_nhom tv3 JOIN nhom n3 ON n3.id=tv3.nhom_id
                     WHERE tv3.sinhvien_id=? AND tv3.trang_thai='cho_xac_nhan' AND n3.lop_id=?
-                ")->execute([$sv_id, $row['lop_id']]);
+                ", [$sv_id, $row['lop_id']]);
                 set_flash('success', 'Đã tham gia nhóm!');
             }
         } elseif ($action === 'tu_choi') {
-            $pdo->prepare("DELETE FROM thanhvien_nhom WHERE id=?")->execute([$tv_id]);
+            db_exec("DELETE FROM thanhvien_nhom WHERE id=?", [$tv_id]);
             set_flash('success', 'Đã từ chối lời mời.');
         }
     }
     redirect('/sinhvien/loi_moi.php');
 }
 
-$list = $pdo->prepare("
+$list = db_query("
     SELECT tv.id AS tv_id, n.id AS nhom_id, n.ten_nhom, l.ma_lop, l.ten_lop, u.ho_ten AS ten_truong_nhom
     FROM thanhvien_nhom tv
     JOIN nhom n ON n.id = tv.nhom_id
@@ -50,9 +46,7 @@ $list = $pdo->prepare("
     JOIN users u ON u.id = n.truong_nhom_id
     WHERE tv.sinhvien_id = ? AND tv.trang_thai = 'cho_xac_nhan'
     ORDER BY tv.created_at DESC
-");
-$list->execute([$sv_id]);
-$list = $list->fetchAll();
+", [$sv_id]);
 
 $page_title = 'Lời mời nhóm';
 include __DIR__ . '/../includes/header.php';

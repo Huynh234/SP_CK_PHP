@@ -4,9 +4,7 @@ require_role('giangvien');
 $gv_id = $_SESSION['user_id'];
 
 $lop_id = (int)($_GET['lop_id'] ?? 0);
-$stmt = $pdo->prepare('SELECT * FROM lop_hocphan WHERE id=? AND giangvien_id=?');
-$stmt->execute([$lop_id, $gv_id]);
-$lop = $stmt->fetch();
+$lop = db_query_one('SELECT * FROM lop_hocphan WHERE id=? AND giangvien_id=?', [$lop_id, $gv_id]);
 if (!$lop) { set_flash('error', 'Không tìm thấy lớp.'); redirect('/giangvien/dashboard.php'); }
 
 // Xử lý duyệt / từ chối / yêu cầu điều chỉnh
@@ -17,47 +15,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $phan_hoi = trim($_POST['phan_hoi'] ?? '');
 
     // đảm bảo đăng ký này thuộc 1 nhóm trong lớp của giảng viên này
-    $chk = $pdo->prepare("
-        SELECT dk.*, d.so_nhom_toi_da, d.nguon FROM dangky_detai dk
+    $dk = db_query_one("
+        SELECT dk.*, d.so_nhom_toi_da FROM dangky_detai dk
         JOIN nhom n ON n.id = dk.nhom_id
         JOIN detai d ON d.id = dk.detai_id
         WHERE dk.id=? AND n.lop_id=?
-    ");
-    $chk->execute([$dk_id, $lop_id]);
-    $dk = $chk->fetch();
+    ", [$dk_id, $lop_id]);
 
     if ($dk) {
         if ($action === 'duyet') {
-            // kiểm tra còn chỗ không (đề phòng đã đủ số nhóm từ lúc hiện danh sách tới lúc bấm duyệt)
-            $count = $pdo->prepare("SELECT COUNT(*) c FROM dangky_detai WHERE detai_id=? AND trang_thai='da_duyet'");
-            $count->execute([$dk['detai_id']]);
-            if ($count->fetch()['c'] >= $dk['so_nhom_toi_da']) {
-                set_flash('error', 'Đề tài đã đủ số nhóm đăng ký, không thể duyệt thêm.');
+            // Đếm số nhóm đã duyệt CÙNG đề tài, TRONG CÙNG ĐỢT (so_nhom_toi_da tính theo từng đợt)
+            $count = (int)db_value("SELECT COUNT(*) FROM dangky_detai WHERE detai_id=? AND dot_id=? AND trang_thai='da_duyet'", [$dk['detai_id'], $dk['dot_id']]);
+            if ($count >= $dk['so_nhom_toi_da']) {
+                set_flash('error', 'Đề tài đã đủ số nhóm đăng ký trong đợt này, không thể duyệt thêm.');
             } else {
-                $pdo->prepare("UPDATE dangky_detai SET trang_thai='da_duyet', phan_hoi=? WHERE id=?")->execute([$phan_hoi, $dk_id]);
+                db_exec("UPDATE dangky_detai SET trang_thai='da_duyet', phan_hoi=? WHERE id=?", [$phan_hoi, $dk_id]);
                 set_flash('success', 'Đã duyệt đăng ký đề tài.');
             }
         } elseif ($action === 'tu_choi') {
-            $pdo->prepare("UPDATE dangky_detai SET trang_thai='tu_choi', phan_hoi=? WHERE id=?")->execute([$phan_hoi, $dk_id]);
-            set_flash('success', 'Đã từ chối. Nhóm sẽ cần chọn đề tài khác.');
+            db_exec("UPDATE dangky_detai SET trang_thai='tu_choi', phan_hoi=? WHERE id=?", [$phan_hoi, $dk_id]);
+            set_flash('success', 'Đã từ chối. Nhóm sẽ cần chọn đề tài khác cho đợt này.');
         } elseif ($action === 'dieu_chinh') {
-            $pdo->prepare("UPDATE dangky_detai SET trang_thai='yeu_cau_dieu_chinh', phan_hoi=? WHERE id=?")->execute([$phan_hoi, $dk_id]);
+            db_exec("UPDATE dangky_detai SET trang_thai='yeu_cau_dieu_chinh', phan_hoi=? WHERE id=?", [$phan_hoi, $dk_id]);
             set_flash('success', 'Đã yêu cầu nhóm điều chỉnh đề tài.');
         }
     }
     redirect('/giangvien/duyet_dangky.php?lop_id=' . $lop_id);
 }
 
-$list = $pdo->prepare("
-    SELECT dk.*, n.ten_nhom, d.ten_detai, d.mo_ta, d.nguon
+$list = db_query("
+    SELECT dk.*, n.ten_nhom, d.ten_detai, d.mo_ta, d.nguon, dd.ten_dot
     FROM dangky_detai dk
     JOIN nhom n ON n.id = dk.nhom_id
     JOIN detai d ON d.id = dk.detai_id
+    JOIN dot_dangky dd ON dd.id = dk.dot_id
     WHERE n.lop_id = ?
     ORDER BY FIELD(dk.trang_thai,'cho_duyet','yeu_cau_dieu_chinh','da_duyet','tu_choi'), dk.created_at
-");
-$list->execute([$lop_id]);
-$list = $list->fetchAll();
+", [$lop_id]);
 
 $page_title = 'Duyệt đăng ký đề tài';
 include __DIR__ . '/../includes/header.php';
@@ -73,6 +67,7 @@ include __DIR__ . '/../includes/header.php';
       <div>
         <div class="font-semibold text-slate-800">
           <?= e($dk['ten_nhom']) ?> → <?= e($dk['ten_detai']) ?>
+          <span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full ml-1"><?= e($dk['ten_dot']) ?></span>
           <?php if ($dk['nguon']==='sinhvien'): ?><span class="text-xs bg-violet-50 text-violet-700 px-2 py-0.5 rounded-full ml-1">SV tự đề xuất</span><?php endif; ?>
           <?php if ($dk['la_random']): ?><span class="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full ml-1">random</span><?php endif; ?>
         </div>

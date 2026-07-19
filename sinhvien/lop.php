@@ -4,14 +4,11 @@ require_role('sinhvien');
 $sv_id = $_SESSION['user_id'];
 
 $id = (int)($_GET['id'] ?? 0);
-$stmt = $pdo->prepare("
-    SELECT l.*, h.ma_hp, h.ten_hp FROM lop_hocphan l
-    JOIN hocphan h ON h.id=l.hocphan_id
+$lop = db_query_one("
+    SELECT l.* FROM lop_hocphan l
     JOIN lop_sinhvien ls ON ls.lop_id=l.id AND ls.sinhvien_id=?
     WHERE l.id=?
-");
-$stmt->execute([$sv_id, $id]);
-$lop = $stmt->fetch();
+", [$sv_id, $id]);
 if (!$lop) { set_flash('error', 'Không tìm thấy lớp hoặc bạn không thuộc lớp này.'); redirect('/sinhvien/dashboard.php'); }
 
 // Tạo nhóm mới
@@ -22,35 +19,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'tao_n
         set_flash('error', 'Đã hết hạn đăng ký nhóm.');
         redirect('/sinhvien/lop.php?id=' . $id);
     }
-    // Kiểm tra đã có nhóm trong lớp chưa
-    $chk = $pdo->prepare("
+    $daCoNhom = db_query_one("
         SELECT n.id FROM thanhvien_nhom tv JOIN nhom n ON n.id=tv.nhom_id
         WHERE tv.sinhvien_id=? AND tv.trang_thai='da_xac_nhan' AND n.lop_id=?
-    ");
-    $chk->execute([$sv_id, $id]);
-    if ($chk->fetch()) {
+    ", [$sv_id, $id]);
+    if ($daCoNhom) {
         set_flash('error', 'Bạn đã ở trong một nhóm của lớp này rồi.');
         redirect('/sinhvien/lop.php?id=' . $id);
     }
 
     $ten = trim($_POST['ten_nhom']) ?: ($_SESSION['ho_ten'] . "'s Group");
-    $pdo->prepare("INSERT INTO nhom (lop_id, ten_nhom, truong_nhom_id, nguon_tao) VALUES (?,?,?,'sinhvien')")
-        ->execute([$id, $ten, $sv_id]);
-    $nhomId = $pdo->lastInsertId();
-    $pdo->prepare("INSERT INTO thanhvien_nhom (nhom_id, sinhvien_id, trang_thai) VALUES (?,?,'da_xac_nhan')")
-        ->execute([$nhomId, $sv_id]);
+    db_exec("INSERT INTO nhom (lop_id, ten_nhom, truong_nhom_id, nguon_tao) VALUES (?,?,?,'sinhvien')", [$id, $ten, $sv_id]);
+    $nhomId = db_last_id();
+    db_exec("INSERT INTO thanhvien_nhom (nhom_id, sinhvien_id, trang_thai) VALUES (?,?,'da_xac_nhan')", [$nhomId, $sv_id]);
 
     set_flash('success', 'Đã tạo nhóm. Hãy mời thêm thành viên!');
     redirect('/sinhvien/nhom.php?id=' . $nhomId);
 }
 
 // Nhóm hiện tại của sinh viên trong lớp này (nếu có)
-$myGroup = $pdo->prepare("
+$myGroup = db_query_one("
     SELECT n.* FROM thanhvien_nhom tv JOIN nhom n ON n.id=tv.nhom_id
     WHERE tv.sinhvien_id=? AND tv.trang_thai='da_xac_nhan' AND n.lop_id=?
-");
-$myGroup->execute([$sv_id, $id]);
-$myGroup = $myGroup->fetch();
+", [$sv_id, $id]);
 
 if ($myGroup) {
     redirect('/sinhvien/nhom.php?id=' . $myGroup['id']);
@@ -69,7 +60,7 @@ include __DIR__ . '/../includes/header.php';
   <?php if (is_qua_han($lop['han_dang_ky_nhom'])): ?>
     <div class="bg-rose-50 border border-rose-200 text-rose-700 text-sm rounded-xl p-4">
       Đã hết hạn đăng ký nhóm (<?= format_datetime($lop['han_dang_ky_nhom']) ?>) và bạn chưa có nhóm.
-      Hệ thống sẽ tự động xếp bạn vào một nhóm khi giảng viên chạy random.
+      Giảng viên sẽ tự động xếp bạn vào một nhóm (random hoặc chia thủ công).
     </div>
   <?php else: ?>
     <div class="bg-white border border-slate-200 rounded-xl p-5">

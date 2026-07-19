@@ -3,12 +3,10 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 require_role('admin');
 
 $id = (int)($_GET['id'] ?? 0);
-$stmt = $pdo->prepare('SELECT l.*, h.ma_hp, h.ten_hp FROM lop_hocphan l JOIN hocphan h ON h.id=l.hocphan_id WHERE l.id=?');
-$stmt->execute([$id]);
-$lop = $stmt->fetch();
+$lop = db_query_one('SELECT l.*, h.ma_hp, h.ten_hp FROM lop_hocphan l JOIN hocphan h ON h.id=l.hocphan_id WHERE l.id=?', [$id]);
 if (!$lop) { set_flash('error', 'Không tìm thấy lớp học phần.'); redirect('/admin/lop.php'); }
 
-// Cập nhật thông tin & điều kiện lớp (sĩ số nhóm, hạn đăng ký...)
+// Cập nhật thông tin & điều kiện lớp (sĩ số nhóm, hạn đăng ký nhóm...)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'update_settings') {
     csrf_check();
     $ten_lop = trim($_POST['ten_lop']);
@@ -16,15 +14,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
     $si_min = (int)$_POST['si_so_nhom_toi_thieu'];
     $si_max = (int)$_POST['si_so_nhom_toi_da'];
     $han_nhom = $_POST['han_dang_ky_nhom'] !== '' ? $_POST['han_dang_ky_nhom'] : null;
-    $han_detai = $_POST['han_dang_ky_detai'] !== '' ? $_POST['han_dang_ky_detai'] : null;
 
     if ($ten_lop === '' || $si_min < 1 || $si_max < $si_min) {
         set_flash('error', 'Vui lòng kiểm tra lại tên lớp và sĩ số nhóm (tối đa phải ≥ tối thiểu).');
         redirect('/admin/lop_detail.php?id=' . $id);
     }
 
-    $pdo->prepare('UPDATE lop_hocphan SET ten_lop=?, hoc_ky=?, si_so_nhom_toi_thieu=?, si_so_nhom_toi_da=?, han_dang_ky_nhom=?, han_dang_ky_detai=? WHERE id=?')
-        ->execute([$ten_lop, $hoc_ky, $si_min, $si_max, $han_nhom, $han_detai, $id]);
+    db_exec('UPDATE lop_hocphan SET ten_lop=?, hoc_ky=?, si_so_nhom_toi_thieu=?, si_so_nhom_toi_da=?, han_dang_ky_nhom=? WHERE id=?',
+        [$ten_lop, $hoc_ky, $si_min, $si_max, $han_nhom, $id]);
 
     set_flash('success', 'Đã cập nhật thông tin lớp học phần.');
     redirect('/admin/lop_detail.php?id=' . $id);
@@ -34,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'updat
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'set_gv') {
     csrf_check();
     $gv_id = $_POST['giangvien_id'] !== '' ? (int)$_POST['giangvien_id'] : null;
-    $pdo->prepare('UPDATE lop_hocphan SET giangvien_id=? WHERE id=?')->execute([$gv_id, $id]);
+    db_exec('UPDATE lop_hocphan SET giangvien_id=? WHERE id=?', [$gv_id, $id]);
     set_flash('success', 'Đã cập nhật giảng viên phụ trách.');
     redirect('/admin/lop_detail.php?id=' . $id);
 }
@@ -45,9 +42,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_o
     $sv_id = (int)$_POST['sinhvien_id'];
     if ($sv_id) {
         try {
-            $pdo->prepare('INSERT INTO lop_sinhvien (lop_id, sinhvien_id) VALUES (?,?)')->execute([$id, $sv_id]);
+            db_exec('INSERT INTO lop_sinhvien (lop_id, sinhvien_id) VALUES (?,?)', [$id, $sv_id]);
             set_flash('success', 'Đã thêm sinh viên vào lớp.');
-        } catch (PDOException $e) {
+        } catch (mysqli_sql_exception $e) {
             set_flash('error', 'Sinh viên đã có trong lớp.');
         }
     }
@@ -62,14 +59,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_l
     foreach ($lines as $ma) {
         $ma = trim($ma);
         if ($ma === '') continue;
-        $u = $pdo->prepare("SELECT id FROM users WHERE (username=? OR mssv_mgv=?) AND role='sinhvien'");
-        $u->execute([$ma, $ma]);
-        $row = $u->fetch();
+        $row = db_query_one("SELECT id FROM users WHERE (username=? OR mssv_mgv=?) AND role='sinhvien'", [$ma, $ma]);
         if (!$row) { $loi[] = $ma; continue; }
         try {
-            $pdo->prepare('INSERT INTO lop_sinhvien (lop_id, sinhvien_id) VALUES (?,?)')->execute([$id, $row['id']]);
+            db_exec('INSERT INTO lop_sinhvien (lop_id, sinhvien_id) VALUES (?,?)', [$id, $row['id']]);
             $ok++;
-        } catch (PDOException $e) { /* đã tồn tại trong lớp, bỏ qua */ }
+        } catch (mysqli_sql_exception $e) { /* đã tồn tại trong lớp, bỏ qua */ }
     }
     set_flash($loi ? 'error' : 'success', "Đã thêm {$ok} sinh viên." . ($loi ? ' Không tìm thấy: ' . implode(', ', $loi) : ''));
     redirect('/admin/lop_detail.php?id=' . $id);
@@ -78,24 +73,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add_l
 // Xoá sinh viên khỏi lớp
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'remove_sv') {
     csrf_check();
-    $pdo->prepare('DELETE FROM lop_sinhvien WHERE lop_id=? AND sinhvien_id=?')->execute([$id, (int)$_POST['sinhvien_id']]);
+    db_exec('DELETE FROM lop_sinhvien WHERE lop_id=? AND sinhvien_id=?', [$id, (int)$_POST['sinhvien_id']]);
     set_flash('success', 'Đã xoá sinh viên khỏi lớp.');
     redirect('/admin/lop_detail.php?id=' . $id);
 }
 
-$giangviens = $pdo->query("SELECT * FROM users WHERE role='giangvien' ORDER BY ho_ten")->fetchAll();
+$giangviens = db_query("SELECT * FROM users WHERE role='giangvien' ORDER BY ho_ten");
 
-$svInLop = $pdo->prepare("
+$svInLop = db_query("
     SELECT u.* FROM lop_sinhvien ls JOIN users u ON u.id = ls.sinhvien_id
     WHERE ls.lop_id = ? ORDER BY u.ho_ten
-");
-$svInLop->execute([$id]);
-$svInLop = $svInLop->fetchAll();
+", [$id]);
 
 $svIds = array_column($svInLop, 'id');
-$svAvailable = $pdo->prepare("SELECT * FROM users WHERE role='sinhvien'" . ($svIds ? ' AND id NOT IN (' . implode(',', array_fill(0, count($svIds), '?')) . ')' : '') . ' ORDER BY ho_ten');
-$svAvailable->execute($svIds);
-$svAvailable = $svAvailable->fetchAll();
+if ($svIds) {
+    $placeholders = implode(',', array_fill(0, count($svIds), '?'));
+    $svAvailable = db_query("SELECT * FROM users WHERE role='sinhvien' AND id NOT IN ($placeholders) ORDER BY ho_ten", $svIds);
+} else {
+    $svAvailable = db_query("SELECT * FROM users WHERE role='sinhvien' ORDER BY ho_ten");
+}
 
 $page_title = 'Chi tiết lớp';
 include __DIR__ . '/../includes/header.php';
@@ -163,14 +159,9 @@ include __DIR__ . '/../includes/header.php';
             value="<?= $lop['han_dang_ky_nhom'] ? date('Y-m-d\TH:i', strtotime($lop['han_dang_ky_nhom'])) : '' ?>"
             class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
         </div>
-        <div>
-          <label class="block text-xs font-medium text-slate-600 mb-1">Hạn đăng ký đề tài</label>
-          <input name="han_dang_ky_detai" type="datetime-local"
-            value="<?= $lop['han_dang_ky_detai'] ? date('Y-m-d\TH:i', strtotime($lop['han_dang_ky_detai'])) : '' ?>"
-            class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
-        </div>
         <button class="w-full bg-brand-600 hover:bg-brand-700 text-white text-sm px-3 py-2 rounded-lg">Lưu thay đổi</button>
       </form>
+      <p class="text-xs text-slate-400 mt-2">Đợt đăng ký đề tài (giữa kỳ/cuối kỳ) do giảng viên phụ trách quản lý riêng tại trang chi tiết lớp bên giao diện Giảng viên.</p>
     </div>
 
     <div class="bg-white border border-slate-200 rounded-xl p-5">

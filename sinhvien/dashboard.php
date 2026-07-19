@@ -3,7 +3,7 @@ require_once __DIR__ . '/../includes/bootstrap.php';
 require_role('sinhvien');
 $sv_id = $_SESSION['user_id'];
 
-$stmt = $pdo->prepare("
+$lops = db_query("
     SELECT l.*, h.ma_hp, h.ten_hp, u.ho_ten AS ten_gv,
       (SELECT n.id FROM thanhvien_nhom tv JOIN nhom n ON n.id=tv.nhom_id
        WHERE tv.sinhvien_id=? AND tv.trang_thai='da_xac_nhan' AND n.lop_id=l.id LIMIT 1) AS nhom_id
@@ -12,9 +12,7 @@ $stmt = $pdo->prepare("
     LEFT JOIN users u ON u.id = l.giangvien_id
     JOIN lop_sinhvien ls ON ls.lop_id = l.id AND ls.sinhvien_id = ?
     ORDER BY l.created_at DESC
-");
-$stmt->execute([$sv_id, $sv_id]);
-$lops = $stmt->fetchAll();
+", [$sv_id, $sv_id]);
 
 $page_title = 'Lớp của tôi';
 include __DIR__ . '/../includes/header.php';

@@ -4,16 +4,14 @@ require_role('sinhvien');
 $sv_id = $_SESSION['user_id'];
 
 $id = (int)($_GET['id'] ?? 0);
-$stmt = $pdo->prepare('SELECT n.*, l.ma_lop, l.ten_lop, l.id AS lop_id, l.si_so_nhom_toi_da, l.han_dang_ky_nhom, l.han_dang_ky_detai
-    FROM nhom n JOIN lop_hocphan l ON l.id = n.lop_id WHERE n.id=?');
-$stmt->execute([$id]);
-$nhom = $stmt->fetch();
+$nhom = db_query_one("
+    SELECT n.*, l.ma_lop, l.ten_lop, l.id AS lop_id, l.si_so_nhom_toi_da, l.han_dang_ky_nhom
+    FROM nhom n JOIN lop_hocphan l ON l.id = n.lop_id WHERE n.id=?
+", [$id]);
 if (!$nhom) { set_flash('error', 'Không tìm thấy nhóm.'); redirect('/sinhvien/dashboard.php'); }
 
-// Xác nhận sinh viên có thuộc nhóm này (đã xác nhận hoặc đang chờ)
-$myRow = $pdo->prepare('SELECT * FROM thanhvien_nhom WHERE nhom_id=? AND sinhvien_id=?');
-$myRow->execute([$id, $sv_id]);
-$myRow = $myRow->fetch();
+// Xác nhận sinh viên có thuộc nhóm này (đã xác nhận)
+$myRow = db_query_one('SELECT * FROM thanhvien_nhom WHERE nhom_id=? AND sinhvien_id=?', [$id, $sv_id]);
 if (!$myRow || $myRow['trang_thai'] !== 'da_xac_nhan') {
     set_flash('error', 'Bạn không thuộc nhóm này.');
     redirect('/sinhvien/lop.php?id=' . $nhom['lop_id']);
@@ -28,28 +26,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'moi')
 
     $svMoiId = (int)$_POST['sinhvien_id'];
 
-    // Kiểm tra sĩ số hiện tại (đã xác nhận + đang chờ) < tối đa
-    $slot = $pdo->prepare("SELECT COUNT(*) c FROM thanhvien_nhom WHERE nhom_id=? AND trang_thai IN ('da_xac_nhan','cho_xac_nhan')");
-    $slot->execute([$id]);
-    if ($slot->fetch()['c'] >= $nhom['si_so_nhom_toi_da']) {
+    $slot = (int)db_value("SELECT COUNT(*) FROM thanhvien_nhom WHERE nhom_id=? AND trang_thai IN ('da_xac_nhan','cho_xac_nhan')", [$id]);
+    if ($slot >= $nhom['si_so_nhom_toi_da']) {
         set_flash('error', 'Nhóm đã đạt số lượng thành viên tối đa (kể cả lời mời đang chờ).');
         redirect('/sinhvien/nhom.php?id=' . $id);
     }
-    // Kiểm tra sinh viên đã có nhóm khác (đã xác nhận) trong lớp chưa
-    $daCoNhom = $pdo->prepare("
+    $daCoNhom = db_query_one("
         SELECT tv.id FROM thanhvien_nhom tv JOIN nhom n ON n.id=tv.nhom_id
         WHERE tv.sinhvien_id=? AND tv.trang_thai='da_xac_nhan' AND n.lop_id=?
-    ");
-    $daCoNhom->execute([$svMoiId, $nhom['lop_id']]);
-    if ($daCoNhom->fetch()) {
+    ", [$svMoiId, $nhom['lop_id']]);
+    if ($daCoNhom) {
         set_flash('error', 'Sinh viên này đã ở trong một nhóm khác của lớp.');
         redirect('/sinhvien/nhom.php?id=' . $id);
     }
 
     try {
-        $pdo->prepare("INSERT INTO thanhvien_nhom (nhom_id, sinhvien_id, trang_thai) VALUES (?,?,'cho_xac_nhan')")->execute([$id, $svMoiId]);
+        db_exec("INSERT INTO thanhvien_nhom (nhom_id, sinhvien_id, trang_thai) VALUES (?,?,'cho_xac_nhan')", [$id, $svMoiId]);
         set_flash('success', 'Đã gửi lời mời. Chờ sinh viên chấp nhận.');
-    } catch (PDOException $e) {
+    } catch (mysqli_sql_exception $e) {
         set_flash('error', 'Sinh viên này đã được mời trước đó.');
     }
     redirect('/sinhvien/nhom.php?id=' . $id);
@@ -59,38 +53,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'moi')
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'huy_moi') {
     csrf_check();
     if ($isLeader) {
-        $pdo->prepare("DELETE FROM thanhvien_nhom WHERE nhom_id=? AND sinhvien_id=? AND trang_thai='cho_xac_nhan'")
-            ->execute([$id, (int)$_POST['sinhvien_id']]);
+        db_exec("DELETE FROM thanhvien_nhom WHERE nhom_id=? AND sinhvien_id=? AND trang_thai='cho_xac_nhan'", [$id, (int)$_POST['sinhvien_id']]);
         set_flash('success', 'Đã huỷ lời mời.');
     }
     redirect('/sinhvien/nhom.php?id=' . $id);
 }
 
 // Danh sách thành viên
-$tv = $pdo->prepare('SELECT tv.*, u.ho_ten, u.mssv_mgv FROM thanhvien_nhom tv JOIN users u ON u.id=tv.sinhvien_id WHERE tv.nhom_id=? ORDER BY tv.trang_thai, u.ho_ten');
-$tv->execute([$id]);
-$thanhvien = $tv->fetchAll();
+$thanhvien = db_query('SELECT tv.*, u.ho_ten, u.mssv_mgv FROM thanhvien_nhom tv JOIN users u ON u.id=tv.sinhvien_id WHERE tv.nhom_id=? ORDER BY tv.trang_thai, u.ho_ten', [$id]);
 
-// Bạn cùng lớp có thể mời (chưa trong nhóm này, chưa có nhóm khác đã xác nhận trong lớp)
+// Bạn cùng lớp có thể mời
 $idsHienCo = array_column($thanhvien, 'sinhvien_id');
-$phAvail = $idsHienCo ? implode(',', array_fill(0, count($idsHienCo), '?')) : "0";
-$avail = $pdo->prepare("
-    SELECT u.id, u.ho_ten, u.mssv_mgv FROM users u
-    JOIN lop_sinhvien ls ON ls.sinhvien_id = u.id AND ls.lop_id = ?
-    WHERE u.id NOT IN ($phAvail)
-    AND u.id NOT IN (
-        SELECT tv2.sinhvien_id FROM thanhvien_nhom tv2 JOIN nhom n2 ON n2.id=tv2.nhom_id
-        WHERE n2.lop_id = ? AND tv2.trang_thai='da_xac_nhan'
-    )
-    ORDER BY u.ho_ten
-");
-$avail->execute(array_merge([$nhom['lop_id']], $idsHienCo, [$nhom['lop_id']]));
-$avail = $avail->fetchAll();
+if ($idsHienCo) {
+    $ph = implode(',', array_fill(0, count($idsHienCo), '?'));
+    $avail = db_query("
+        SELECT u.id, u.ho_ten, u.mssv_mgv FROM users u
+        JOIN lop_sinhvien ls ON ls.sinhvien_id = u.id AND ls.lop_id = ?
+        WHERE u.id NOT IN ($ph)
+        AND u.id NOT IN (
+            SELECT tv2.sinhvien_id FROM thanhvien_nhom tv2 JOIN nhom n2 ON n2.id=tv2.nhom_id
+            WHERE n2.lop_id = ? AND tv2.trang_thai='da_xac_nhan'
+        )
+        ORDER BY u.ho_ten
+    ", array_merge([$nhom['lop_id']], $idsHienCo, [$nhom['lop_id']]));
+} else {
+    $avail = db_query("
+        SELECT u.id, u.ho_ten, u.mssv_mgv FROM users u
+        JOIN lop_sinhvien ls ON ls.sinhvien_id = u.id AND ls.lop_id = ?
+        ORDER BY u.ho_ten
+    ", [$nhom['lop_id']]);
+}
 
-// Đăng ký đề tài của nhóm
-$dk = $pdo->prepare('SELECT dk.*, d.ten_detai, d.mo_ta FROM dangky_detai dk JOIN detai d ON d.id=dk.detai_id WHERE dk.nhom_id=?');
-$dk->execute([$id]);
-$dangky = $dk->fetch();
+// Các đợt đăng ký đề tài của lớp + đăng ký hiện tại của nhóm cho mỗi đợt
+$dots = db_query('SELECT * FROM dot_dangky WHERE lop_id=? ORDER BY created_at', [$nhom['lop_id']]);
+$mucDichLabel = ['giua_ky' => 'Giữa kỳ', 'cuoi_ky' => 'Cuối kỳ', 'khac' => 'Khác'];
+$trangThaiLabel = ['cho_duyet'=>'chờ duyệt','da_duyet'=>'đã duyệt','tu_choi'=>'từ chối','yeu_cau_dieu_chinh'=>'yêu cầu điều chỉnh'];
+$trangThaiMau = ['cho_duyet'=>'bg-amber-50 text-amber-700','da_duyet'=>'bg-emerald-50 text-emerald-700','tu_choi'=>'bg-rose-50 text-rose-700','yeu_cau_dieu_chinh'=>'bg-sky-50 text-sky-700'];
+foreach ($dots as &$dot) {
+    $dot['dangky'] = db_query_one('SELECT dk.*, d.ten_detai, d.mo_ta FROM dangky_detai dk JOIN detai d ON d.id=dk.detai_id WHERE dk.nhom_id=? AND dk.dot_id=?', [$id, $dot['id']]);
+}
+unset($dot);
 
 $page_title = 'Nhóm của tôi';
 include __DIR__ . '/../includes/header.php';
@@ -142,27 +144,38 @@ include __DIR__ . '/../includes/header.php';
     <?php endif; ?>
   </div>
 
-  <div class="bg-white border border-slate-200 rounded-xl p-5 h-fit">
-    <h2 class="font-semibold text-slate-800 mb-3 text-sm">Đề tài</h2>
-    <?php if ($dangky): ?>
-      <?php $mau = ['cho_duyet'=>'bg-amber-50 text-amber-700','da_duyet'=>'bg-emerald-50 text-emerald-700','tu_choi'=>'bg-rose-50 text-rose-700','yeu_cau_dieu_chinh'=>'bg-sky-50 text-sky-700'][$dangky['trang_thai']]; ?>
-      <div class="font-medium text-slate-800"><?= e($dangky['ten_detai']) ?></div>
-      <p class="text-sm text-slate-500 mt-1"><?= nl2br(e($dangky['mo_ta'])) ?></p>
-      <span class="inline-block text-xs px-2 py-0.5 rounded-full <?= $mau ?> mt-2"><?= e(str_replace('_',' ',$dangky['trang_thai'])) ?></span>
-      <?php if ($dangky['phan_hoi']): ?>
-        <p class="text-xs text-slate-500 mt-2 italic">Phản hồi GV: "<?= e($dangky['phan_hoi']) ?>"</p>
-      <?php endif; ?>
-      <?php if (in_array($dangky['trang_thai'], ['tu_choi','yeu_cau_dieu_chinh'], true) && $isLeader): ?>
-        <a href="<?= BASE_URL ?>/sinhvien/detai.php?lop_id=<?= $nhom['lop_id'] ?>" class="inline-block mt-3 text-xs text-brand-600 hover:underline">→ Chọn/đề xuất đề tài khác</a>
-      <?php endif; ?>
-    <?php else: ?>
-      <p class="text-sm text-slate-500 mb-3">Nhóm chưa đăng ký đề tài.</p>
-      <?php if ($isLeader): ?>
-        <a href="<?= BASE_URL ?>/sinhvien/detai.php?lop_id=<?= $nhom['lop_id'] ?>" class="inline-block bg-brand-600 hover:bg-brand-700 text-white text-sm px-4 py-2 rounded-lg">Chọn đề tài →</a>
-      <?php else: ?>
-        <p class="text-xs text-slate-400">Chỉ trưởng nhóm được đăng ký đề tài.</p>
-      <?php endif; ?>
+  <div class="space-y-4">
+    <?php if (!$dots): ?>
+      <div class="bg-white border border-slate-200 rounded-xl p-5 text-sm text-slate-500">
+        Giảng viên chưa mở đợt đăng ký đề tài nào cho lớp này.
+      </div>
     <?php endif; ?>
+    <?php foreach ($dots as $dot): $dk = $dot['dangky']; ?>
+    <div class="bg-white border border-slate-200 rounded-xl p-5">
+      <div class="flex items-center justify-between mb-2">
+        <h2 class="font-semibold text-slate-800 text-sm"><?= e($dot['ten_dot']) ?></h2>
+        <span class="text-xs text-slate-400"><?= $mucDichLabel[$dot['muc_dich']] ?> · hạn <?= format_datetime($dot['han_dang_ky']) ?></span>
+      </div>
+      <?php if ($dk): ?>
+        <div class="font-medium text-slate-800 text-sm"><?= e($dk['ten_detai']) ?></div>
+        <p class="text-sm text-slate-500 mt-1"><?= nl2br(e($dk['mo_ta'])) ?></p>
+        <span class="inline-block text-xs px-2 py-0.5 rounded-full <?= $trangThaiMau[$dk['trang_thai']] ?> mt-2"><?= $trangThaiLabel[$dk['trang_thai']] ?></span>
+        <?php if ($dk['phan_hoi']): ?>
+          <p class="text-xs text-slate-500 mt-2 italic">Phản hồi GV: "<?= e($dk['phan_hoi']) ?>"</p>
+        <?php endif; ?>
+        <?php if (in_array($dk['trang_thai'], ['tu_choi','yeu_cau_dieu_chinh'], true) && $isLeader): ?>
+          <a href="<?= BASE_URL ?>/sinhvien/detai.php?dot_id=<?= $dot['id'] ?>" class="inline-block mt-3 text-xs text-brand-600 hover:underline">→ Chọn/đề xuất đề tài khác cho đợt này</a>
+        <?php endif; ?>
+      <?php else: ?>
+        <p class="text-sm text-slate-500 mb-2">Nhóm chưa đăng ký đề tài cho đợt này.</p>
+        <?php if ($isLeader): ?>
+          <a href="<?= BASE_URL ?>/sinhvien/detai.php?dot_id=<?= $dot['id'] ?>" class="inline-block bg-brand-600 hover:bg-brand-700 text-white text-xs px-3 py-1.5 rounded-lg">Chọn đề tài →</a>
+        <?php else: ?>
+          <p class="text-xs text-slate-400">Chỉ trưởng nhóm được đăng ký đề tài.</p>
+        <?php endif; ?>
+      <?php endif; ?>
+    </div>
+    <?php endforeach; ?>
   </div>
 </div>
 

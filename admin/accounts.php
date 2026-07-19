@@ -17,15 +17,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
         redirect('/admin/accounts.php');
     }
 
-    $check = $pdo->prepare('SELECT id FROM users WHERE username = ?');
-    $check->execute([$username]);
-    if ($check->fetch()) {
+    if (db_query_one('SELECT id FROM users WHERE username = ?', [$username])) {
         set_flash('error', "Tài khoản '{$username}' đã tồn tại.");
         redirect('/admin/accounts.php');
     }
 
-    $stmt = $pdo->prepare('INSERT INTO users (username, password, ho_ten, email, mssv_mgv, role) VALUES (?,?,?,?,?,?)');
-    $stmt->execute([$username, password_hash($password, PASSWORD_BCRYPT), $ho_ten, $email, $mssv, $role]);
+    db_exec('INSERT INTO users (username, password, ho_ten, email, mssv_mgv, role) VALUES (?,?,?,?,?,?)',
+        [$username, password_hash($password, PASSWORD_BCRYPT), $ho_ten, $email, $mssv, $role]);
 
     set_flash('success', "Đã tạo tài khoản '{$username}' — mật khẩu tạm: {$password}");
     redirect('/admin/accounts.php');
@@ -35,8 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add')
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'toggle_lock') {
     csrf_check();
     $id = (int)$_POST['id'];
-    $stmt = $pdo->prepare("UPDATE users SET trang_thai = IF(trang_thai='active','locked','active') WHERE id=?");
-    $stmt->execute([$id]);
+    db_exec("UPDATE users SET trang_thai = IF(trang_thai='active','locked','active') WHERE id=?", [$id]);
     set_flash('success', 'Đã cập nhật trạng thái tài khoản.');
     redirect('/admin/accounts.php');
 }
@@ -49,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
         set_flash('error', 'Không thể tự xoá chính mình.');
         redirect('/admin/accounts.php');
     }
-    $pdo->prepare('DELETE FROM users WHERE id=?')->execute([$id]);
+    db_exec('DELETE FROM users WHERE id=?', [$id]);
     set_flash('success', 'Đã xoá tài khoản.');
     redirect('/admin/accounts.php');
 }
@@ -68,9 +65,7 @@ if ($q !== '') {
     $params[] = "%$q%"; $params[] = "%$q%"; $params[] = "%$q%";
 }
 $sql .= ' ORDER BY role, ho_ten';
-$stmt = $pdo->prepare($sql);
-$stmt->execute($params);
-$users = $stmt->fetchAll();
+$users = db_query($sql, $params);
 
 $page_title = 'Quản lý tài khoản';
 include __DIR__ . '/../includes/header.php';
