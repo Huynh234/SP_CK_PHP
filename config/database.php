@@ -4,17 +4,19 @@
 // Sửa các thông tin bên dưới cho khớp với XAMPP của bạn
 // Yêu cầu PHP >= 8.1 (mysqli_stmt::execute() nhận mảng tham số trực tiếp)
 // ==========================================================
+// echo PHP_VERSION;
 $DB_HOST = 'localhost';
 $DB_NAME = 'qlnhom_detai';
 $DB_USER = 'root';
 $DB_PASS = '';
+$DB_PORT = 3307; // cái này m sửa lại thhanhf 3306 tại tao dùng  3307
 
 // Bật chế độ báo lỗi bằng exception (mysqli_sql_exception) thay vì
 // phải tự kiểm tra return value false ở mọi câu lệnh.
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 
 try {
-    $mysqli = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
+    $mysqli = new mysqli($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME, $DB_PORT);
     $mysqli->set_charset('utf8mb4');
 } catch (mysqli_sql_exception $e) {
     die('Lỗi kết nối CSDL: ' . htmlspecialchars($e->getMessage()));
