@@ -1,5 +1,8 @@
 <?php
-require_once __DIR__ . '/../includes/bootstrap.php';
+require_once '../config/config.php';
+require_once '../config/database.php';
+require_once '../includes/auth.php';
+require_once '../includes/functions.php';
 require_role('sinhvien');
 $sv_id = $_SESSION['user_id'];
 
@@ -99,7 +102,7 @@ $detais = db_query("
 $mucDichLabel = ['giua_ky' => 'Giữa kỳ', 'cuoi_ky' => 'Cuối kỳ', 'khac' => 'Khác'];
 
 $page_title = 'Chọn đề tài';
-include __DIR__ . '/../includes/header.php';
+include '../includes/header.php';
 ?>
 <a href="<?= BASE_URL ?>/sinhvien/nhom.php?id=<?= $nhom['id'] ?>" class="text-sm text-brand-600 hover:underline">← <?= e($nhom['ten_nhom']) ?></a>
 <h1 class="text-xl font-bold text-slate-800 mt-2 mb-1">Chọn đề tài — <?= e($dot['ten_dot']) ?></h1>
@@ -155,4 +158,4 @@ include __DIR__ . '/../includes/header.php';
   </form>
 </div>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>

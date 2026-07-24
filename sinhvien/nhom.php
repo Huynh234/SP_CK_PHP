@@ -1,5 +1,8 @@
 <?php
-require_once __DIR__ . '/../includes/bootstrap.php';
+require_once '../config/config.php';
+require_once '../config/database.php';
+require_once '../includes/auth.php';
+require_once '../includes/functions.php';
 require_role('sinhvien');
 $sv_id = $_SESSION['user_id'];
 
@@ -95,7 +98,7 @@ foreach ($dots as &$dot) {
 unset($dot);
 
 $page_title = 'Nhóm của tôi';
-include __DIR__ . '/../includes/header.php';
+include '../includes/header.php';
 ?>
 <a href="<?= BASE_URL ?>/sinhvien/dashboard.php" class="text-sm text-brand-600 hover:underline">← <?= e($nhom['ma_lop']) ?></a>
 <h1 class="text-xl font-bold text-slate-800 mt-2 mb-6"><?= e($nhom['ten_nhom']) ?> <?= $isLeader ? '<span class="text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full align-middle">Trưởng nhóm</span>' : '' ?></h1>
@@ -179,4 +182,4 @@ include __DIR__ . '/../includes/header.php';
   </div>
 </div>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>

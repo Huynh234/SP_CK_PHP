@@ -1,5 +1,9 @@
 <?php
-require_once __DIR__ . '/../includes/bootstrap.php';
+require_once '../config/config.php';
+require_once '../config/database.php';
+require_once '../includes/auth.php';
+require_once '../includes/functions.php';
+
 require_role('admin');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add') {
@@ -30,7 +34,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delet
 $list = db_query('SELECT * FROM hocphan ORDER BY ma_hp');
 
 $page_title = 'Học phần';
-include __DIR__ . '/../includes/header.php';
+include '../includes/header.php';
 ?>
 <div class="flex items-center justify-between mb-6">
   <h1 class="text-xl font-bold text-slate-800">Quản lý học phần</h1>
@@ -85,4 +89,4 @@ include __DIR__ . '/../includes/header.php';
   </div>
 </div>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>

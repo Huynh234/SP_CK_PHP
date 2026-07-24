@@ -1,5 +1,8 @@
 <?php
-require_once __DIR__ . '/../includes/bootstrap.php';
+require_once '../config/config.php';
+require_once '../config/database.php';
+require_once '../includes/auth.php';
+require_once '../includes/functions.php';
 require_role('sinhvien');
 $sv_id = $_SESSION['user_id'];
 
@@ -15,7 +18,7 @@ $lops = db_query("
 ", [$sv_id, $sv_id]);
 
 $page_title = 'Lớp của tôi';
-include __DIR__ . '/../includes/header.php';
+include '../includes/header.php';
 ?>
 <h1 class="text-xl font-bold text-slate-800 mb-1">Chào, <?= e($_SESSION['ho_ten']) ?> 👋</h1>
 <p class="text-sm text-slate-500 mb-6">Các lớp học phần bạn đang tham gia.</p>
@@ -40,4 +43,4 @@ include __DIR__ . '/../includes/header.php';
   <?php if (!$lops): ?><div class="text-slate-400 text-sm">Bạn chưa được thêm vào lớp học phần nào.</div><?php endif; ?>
 </div>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>

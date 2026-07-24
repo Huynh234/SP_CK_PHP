@@ -1,5 +1,8 @@
 <?php
-require_once __DIR__ . '/../includes/bootstrap.php';
+require_once '../config/config.php';
+require_once '../config/database.php';
+require_once '../includes/auth.php';
+require_once '../includes/functions.php';
 require_role('admin');
 
 $ket_qua = null; // ['ok'=>n, 'loi'=>[...]]
@@ -62,7 +65,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page_title = 'Import tài khoản từ CSV';
-include __DIR__ . '/../includes/header.php';
+include '../includes/header.php';
 ?>
 
 <div class="max-w-2xl">
@@ -112,4 +115,4 @@ sv.em,Vũ Thị Em,em.vt@truong.edu.vn,SV005,sinhvien</pre>
   </div>
 </div>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>

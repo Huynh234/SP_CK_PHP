@@ -1,5 +1,9 @@
 <?php
-require_once __DIR__ . '/../includes/bootstrap.php';
+require_once '../config/config.php';
+require_once '../config/database.php';
+require_once '../includes/auth.php';
+require_once '../includes/functions.php';
+
 require_role('admin');
 
 $soGV  = db_value("SELECT COUNT(*) FROM users WHERE role='giangvien'");
@@ -8,7 +12,7 @@ $soLop = db_value("SELECT COUNT(*) FROM lop_hocphan");
 $soHP  = db_value("SELECT COUNT(*) FROM hocphan");
 
 $page_title = 'Tổng quan';
-include __DIR__ . '/../includes/header.php';
+include '../includes/header.php';
 ?>
 <h1 class="text-xl font-bold text-slate-800 mb-1">Chào, <?= e($_SESSION['ho_ten']) ?> 👋</h1>
 <p class="text-sm text-slate-500 mb-6">Bảng điều khiển quản trị hệ thống.</p>
@@ -50,4 +54,4 @@ include __DIR__ . '/../includes/header.php';
   </a>
 </div>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>

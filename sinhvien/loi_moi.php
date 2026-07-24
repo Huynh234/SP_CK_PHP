@@ -1,5 +1,8 @@
 <?php
-require_once __DIR__ . '/../includes/bootstrap.php';
+require_once '../config/config.php';
+require_once '../config/database.php';
+require_once '../includes/auth.php';
+require_once '../includes/functions.php';
 require_role('sinhvien');
 $sv_id = $_SESSION['user_id'];
 
@@ -49,7 +52,7 @@ $list = db_query("
 ", [$sv_id]);
 
 $page_title = 'Lời mời nhóm';
-include __DIR__ . '/../includes/header.php';
+include  '../includes/header.php';
 ?>
 <h1 class="text-xl font-bold text-slate-800 mb-6">Lời mời vào nhóm</h1>
 
@@ -73,4 +76,4 @@ include __DIR__ . '/../includes/header.php';
   <?php if (!$list): ?><div class="text-center text-slate-400 py-12">Bạn không có lời mời nào đang chờ.</div><?php endif; ?>
 </div>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include  '../includes/footer.php'; ?>

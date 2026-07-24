@@ -1,5 +1,8 @@
 <?php
-require_once __DIR__ . '/../includes/bootstrap.php';
+require_once '../config/config.php';
+require_once '../config/database.php';
+require_once '../includes/auth.php';
+require_once '../includes/functions.php';
 require_role('admin');
 
 $id = (int)($_GET['id'] ?? 0);
@@ -94,7 +97,7 @@ if ($svIds) {
 }
 
 $page_title = 'Chi tiết lớp';
-include __DIR__ . '/../includes/header.php';
+include '../includes/header.php';
 ?>
 <a href="<?= BASE_URL ?>/admin/lop.php" class="text-sm text-brand-600 hover:underline">← Danh sách lớp</a>
 <div class="flex items-center gap-2 mt-2 mb-6">
@@ -207,4 +210,4 @@ include __DIR__ . '/../includes/header.php';
   </div>
 </div>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>

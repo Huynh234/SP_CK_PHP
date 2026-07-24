@@ -1,5 +1,8 @@
 <?php
-require_once __DIR__ . '/../includes/bootstrap.php';
+require_once '../config/config.php';
+require_once '../config/database.php';
+require_once '../includes/auth.php';
+require_once '../includes/functions.php';
 require_role('giangvien');
 $gv_id = $_SESSION['user_id'];
 
@@ -204,7 +207,7 @@ $trangThaiLabel = ['cho_duyet'=>'chờ duyệt','da_duyet'=>'đã duyệt','tu_c
 $trangThaiMau = ['cho_duyet'=>'bg-amber-50 text-amber-700','da_duyet'=>'bg-emerald-50 text-emerald-700','tu_choi'=>'bg-rose-50 text-rose-700','yeu_cau_dieu_chinh'=>'bg-sky-50 text-sky-700'];
 
 $page_title = 'Chi tiết lớp';
-include __DIR__ . '/../includes/header.php';
+include '../includes/header.php';
 ?>
 <a href="<?= BASE_URL ?>/giangvien/dashboard.php" class="text-sm text-brand-600 hover:underline">← Danh sách lớp</a>
 <div class="flex flex-wrap items-center justify-between gap-3 mt-2 mb-6">
@@ -401,4 +404,4 @@ include __DIR__ . '/../includes/header.php';
   </div>
 </div>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>

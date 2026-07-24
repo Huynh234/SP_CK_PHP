@@ -1,5 +1,5 @@
 <?php
-require_once __DIR__ . '/includes/bootstrap.php';
+require_once './includes/bootstrap.php';
 
 if (dang_nhap()) {
     redirect('/' . $_SESSION['role'] . '/dashboard.php');
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $page_title = 'Đăng nhập';
-include __DIR__ . '/includes/header.php';
+include './includes/header.php';
 ?>
 
 <div class="min-h-[75vh] flex items-center justify-center -mt-6">
@@ -63,4 +63,4 @@ include __DIR__ . '/includes/header.php';
   </div>
 </div>
 
-<?php include __DIR__ . '/includes/footer.php'; ?>
+<?php include './includes/footer.php'; ?>

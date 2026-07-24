@@ -1,5 +1,9 @@
 <?php
-require_once __DIR__ . '/../includes/bootstrap.php';
+require_once '../config/config.php';
+require_once '../config/database.php';
+require_once '../includes/auth.php';
+require_once '../includes/functions.php';
+
 require_role('admin');
 
 // ---- Thêm tài khoản đơn lẻ ----
@@ -68,7 +72,7 @@ $sql .= ' ORDER BY role, ho_ten';
 $users = db_query($sql, $params);
 
 $page_title = 'Quản lý tài khoản';
-include __DIR__ . '/../includes/header.php';
+include '../includes/header.php';
 ?>
 
 <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
@@ -188,4 +192,4 @@ include __DIR__ . '/../includes/header.php';
   </div>
 </div>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>

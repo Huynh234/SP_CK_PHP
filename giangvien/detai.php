@@ -1,5 +1,8 @@
 <?php
-require_once __DIR__ . '/../includes/bootstrap.php';
+require_once '../config/config.php';
+require_once '../config/database.php';
+require_once '../includes/auth.php';
+require_once '../includes/functions.php';
 require_role('giangvien');
 $gv_id = $_SESSION['user_id'];
 
@@ -162,7 +165,7 @@ $detais = db_query("
 ", [$gv_id]);
 
 $page_title = 'Ngân hàng đề tài';
-include __DIR__ . '/../includes/header.php';
+include '../includes/header.php';
 ?>
 <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
   <h1 class="text-xl font-bold text-slate-800">Ngân hàng đề tài</h1>
@@ -322,4 +325,4 @@ Website bán hàng,Xây dựng website TMĐT cơ bản,2
   </div>
 </div>
 
-<?php include __DIR__ . '/../includes/footer.php'; ?>
+<?php include '../includes/footer.php'; ?>
