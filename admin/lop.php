@@ -5,37 +5,53 @@ require_once '../includes/auth.php';
 require_once '../includes/functions.php';
 require_role('admin');
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'add') {
-    csrf_check();
-    $ma = trim($_POST['ma_lop']);
-    $ten = trim($_POST['ten_lop']);
-    $hp_id = (int)$_POST['hocphan_id'];
-    $gv_id = $_POST['giangvien_id'] !== '' ? (int)$_POST['giangvien_id'] : null;
-    $hoc_ky = trim($_POST['hoc_ky']);
-    $si_min = (int)$_POST['si_so_nhom_toi_thieu'];
-    $si_max = (int)$_POST['si_so_nhom_toi_da'];
-    $han_nhom = $_POST['han_dang_ky_nhom'] !== '' ? $_POST['han_dang_ky_nhom'] : null;
+if (isset($_POST['add_class'])) {
+  csrf_check();
+  $ma = trim($_POST['ma_lop']);
+  $ten = trim($_POST['ten_lop']);
+  $hp_id = (int)$_POST['hocphan_id'];
+  $gv_id = $_POST['giangvien_id'] !== '' ? (int)$_POST['giangvien_id'] : null;
+  $hoc_ky = trim($_POST['hoc_ky']);
+  $si_min = (int)$_POST['si_so_nhom_toi_thieu'];
+  $si_max = (int)$_POST['si_so_nhom_toi_da'];
+  $han_nhom = $_POST['han_dang_ky_nhom'] !== '' ? $_POST['han_dang_ky_nhom'] : null;
 
-    if ($ma === '' || $ten === '' || !$hp_id) {
-        set_flash('error', 'Vui lòng nhập đủ thông tin bắt buộc.');
-        redirect('/admin/lop.php');
-    }
-    try {
-        db_exec('INSERT INTO lop_hocphan (ma_lop, ten_lop, hocphan_id, giangvien_id, hoc_ky, si_so_nhom_toi_thieu, si_so_nhom_toi_da, han_dang_ky_nhom)
-            VALUES (?,?,?,?,?,?,?,?)',
-            [$ma, $ten, $hp_id, $gv_id, $hoc_ky, $si_min ?: 2, $si_max ?: 5, $han_nhom]);
-        set_flash('success', 'Đã tạo lớp học phần.');
-    } catch (mysqli_sql_exception $e) {
-        set_flash('error', 'Mã lớp đã tồn tại.');
-    }
+  $sv_ids = $_POST['sv_id'] ?? [];
+
+  if ($ma === '' || $ten === '' || !$hp_id) {
+    set_flash('error', 'Vui lòng nhập đủ thông tin bắt buộc.');
     redirect('/admin/lop.php');
+  }
+  try {
+    db_exec(
+      'INSERT INTO lop_hocphan (ma_lop, ten_lop, hocphan_id, giangvien_id, hoc_ky, si_so_nhom_toi_thieu, si_so_nhom_toi_da, han_dang_ky_nhom)
+            VALUES (?,?,?,?,?,?,?,?)',
+      [$ma, $ten, $hp_id, $gv_id, $hoc_ky, $si_min ?: 2, $si_max ?: 5, $han_nhom]
+    );
+    set_flash('success', 'Đã tạo lớp học phần.');
+  } catch (mysqli_sql_exception $e) {
+    set_flash('error', 'Mã lớp đã tồn tại.');
+  }
+
+  if (!empty($sv_ids)) {
+    try {
+      $lop_id = db_last_id();
+      foreach ($sv_ids as $sv_id) {
+        db_exec('INSERT IGNORE INTO lop_sinhvien (lop_id, sinhvien_id) VALUES (?,?)', [$lop_id, (int)$sv_id]);
+      }
+    } catch (mysqli_sql_exception $e) {
+      set_flash('error', 'Có lỗi khi thêm sinh viên vào lớp.');
+    }
+  }
+
+  redirect('/admin/lop.php');
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'delete') {
-    csrf_check();
-    db_exec('DELETE FROM lop_hocphan WHERE id=?', [(int)$_POST['id']]);
-    set_flash('success', 'Đã xoá lớp học phần.');
-    redirect('/admin/lop.php');
+if (isset($_POST['delete_class'])) {
+  csrf_check();
+  db_exec('DELETE FROM lop_hocphan WHERE id=?', [(int)$_POST['id']]);
+  set_flash('success', 'Đã xoá lớp học phần.');
+  redirect('/admin/lop.php');
 }
 
 $hocphans = db_query('SELECT * FROM hocphan ORDER BY ma_hp');
@@ -59,33 +75,35 @@ include '../includes/header.php';
 </div>
 
 <div class="grid gap-4">
-  <?php foreach ($list as $l): ?>
-  <div class="bg-white border border-slate-200 rounded-xl p-5 flex flex-wrap items-center justify-between gap-3">
-    <div>
-      <div class="flex items-center gap-2">
-        <span class="font-mono text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded"><?= e($l['ma_lop']) ?></span>
-        <span class="font-semibold text-slate-800"><?= e($l['ten_lop']) ?></span>
-      </div>
-      <div class="text-xs text-slate-500 mt-1">
-        <?= e($l['ma_hp']) ?> — <?= e($l['ten_hp']) ?> · <?= e($l['hoc_ky'] ?: 'Chưa đặt học kỳ') ?> ·
-        GV: <?= e($l['ten_gv'] ?: 'Chưa gán') ?> · <?= $l['so_sv'] ?> sinh viên
-      </div>
-      <div class="text-xs text-slate-400 mt-1">
-        Hạn ĐK nhóm: <?= format_datetime($l['han_dang_ky_nhom']) ?> · Sĩ số nhóm: <?= $l['si_so_nhom_toi_thieu'] ?>–<?= $l['si_so_nhom_toi_da'] ?>
-      </div>
-    </div>
-    <div class="flex items-center gap-2">
-      <a href="<?= BASE_URL ?>/admin/lop_detail.php?id=<?= $l['id'] ?>" class="text-sm text-brand-600 hover:underline">Quản lý →</a>
-      <form method="post" onsubmit="return confirm('Xoá lớp này?');">
-        <?= csrf_field() ?>
-        <input type="hidden" name="action" value="delete">
-        <input type="hidden" name="id" value="<?= $l['id'] ?>">
-        <button class="text-xs text-rose-500 hover:text-rose-700">Xoá</button>
-      </form>
-    </div>
-  </div>
-  <?php endforeach; ?>
-  <?php if (!$list): ?><div class="text-center text-slate-400 py-12">Chưa có lớp học phần nào.</div><?php endif; ?>
+  <?php
+  foreach ($list as $l) {
+    echo '<div class="bg-white border border-slate-200 rounded-xl p-5 flex flex-wrap items-center justify-between gap-3">';
+    echo '<div>';
+    echo '<div class="flex items-center gap-2">';
+    echo '<span class="font-mono text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded">' . $l['ma_lop'] . '</span>';
+    echo '<span class="font-semibold text-slate-800">' . $l['ten_lop'] . '</span>';
+    echo '</div>';
+    echo '<div class="text-xs text-slate-500 mt-1">'
+      . $l['ma_hp'] . ' — ' . $l['ten_hp']
+      . ' · ' . ($l['hoc_ky'] ?: 'Chưa đặt học kỳ')
+      . ' · GV: ' . ($l['ten_gv'] ?: 'Chưa gán')
+      . ' · ' . $l['so_sv'] . ' sinh viên'
+      . '</div>';
+    echo '<div class="text-xs text-slate-400 mt-1">'
+      . 'Hạn ĐK nhóm: ' . format_datetime($l['han_dang_ky_nhom'])
+      . ' · Sĩ số nhóm: ' . $l['si_so_nhom_toi_thieu'] . '–' . $l['si_so_nhom_toi_da']
+      . '</div>';
+    echo '</div>';
+    echo '<div class="flex items-center gap-2">';
+    echo '<form method="post">';
+    echo csrf_field();
+    echo '<input type="hidden" name="id" value="' . $l['id'] . '">';
+    echo '<button name="delete_class" class="text-xs text-rose-500 hover:text-rose-700">Xoá</button>';
+    echo '</form>';
+    echo '</div>';
+    echo '</div>';
+  }
+  ?>
 </div>
 
 <!-- Modal tạo lớp -->
@@ -93,8 +111,7 @@ include '../includes/header.php';
   <div class="bg-white rounded-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
     <h2 class="font-bold text-slate-800 mb-4">Tạo lớp học phần mới</h2>
     <form method="post" class="space-y-3">
-      <?= csrf_field() ?>
-      <input type="hidden" name="action" value="add">
+      <?php echo csrf_field() ?>
       <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="block text-xs font-medium text-slate-600 mb-1">Mã lớp *</label>
@@ -114,18 +131,26 @@ include '../includes/header.php';
           <label class="block text-xs font-medium text-slate-600 mb-1">Học phần *</label>
           <select name="hocphan_id" required class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
             <option value="">-- chọn --</option>
-            <?php foreach ($hocphans as $hp): ?>
-              <option value="<?= $hp['id'] ?>"><?= e($hp['ma_hp']) ?> - <?= e($hp['ten_hp']) ?></option>
-            <?php endforeach; ?>
+            <?php
+            foreach ($hocphans as $hp) {
+              echo '<option value="' . $hp['id'] . '">'
+                . $hp['ma_hp'] . ' - ' . $hp['ten_hp']
+                . '</option>';
+            }
+            ?>
           </select>
         </div>
         <div>
           <label class="block text-xs font-medium text-slate-600 mb-1">Giảng viên phụ trách</label>
           <select name="giangvien_id" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
             <option value="">-- chưa gán --</option>
-            <?php foreach ($giangviens as $gv): ?>
-              <option value="<?= $gv['id'] ?>"><?= e($gv['ho_ten']) ?></option>
-            <?php endforeach; ?>
+            <?php
+            foreach ($giangviens as $gv) {
+              echo '<option value="' . $gv['id'] . '">'
+                . $gv['ho_ten'] . ' (' . $gv['email'] . ')'
+                . '</option>';
+            }
+            ?>
           </select>
         </div>
       </div>
@@ -143,10 +168,21 @@ include '../includes/header.php';
         <label class="block text-xs font-medium text-slate-600 mb-1">Hạn đăng ký nhóm</label>
         <input name="han_dang_ky_nhom" type="datetime-local" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
       </div>
-      <p class="text-xs text-slate-400">Đợt đăng ký đề tài (VD: Giữa kỳ, Cuối kỳ) sẽ được tạo riêng sau, ở trang chi tiết lớp hoặc bởi giảng viên phụ trách.</p>
+      <h2 class="font-semibold text-slate-800 mb-3 text-sm">Thêm 1 sinh viên</h2>
+      <select name="sv_id[]" multiple class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+        <option value="">-- chọn sinh viên --</option>
+        <?php
+        $svAvailable = db_query("SELECT * FROM users WHERE role='sinhvien' ORDER BY ho_ten");
+        foreach ($svAvailable as $sv) {
+          echo '<option value="' . $sv['id'] . '">'
+            . $sv['ho_ten'] . ' (' . $sv['mssv_mgv'] . ')'
+            . '</option>';
+        }
+        ?>
+      </select>
       <div class="flex justify-end gap-2 pt-2">
         <button type="button" onclick="document.getElementById('modalAdd').classList.add('hidden')" class="px-4 py-2 text-sm rounded-lg text-slate-500 hover:bg-slate-100">Huỷ</button>
-        <button class="px-4 py-2 text-sm rounded-lg bg-brand-600 hover:bg-brand-700 text-white">Tạo lớp</button>
+        <button name="add_class" class="px-4 py-2 text-sm rounded-lg bg-brand-600 hover:bg-brand-700 text-white">Tạo lớp</button>
       </div>
     </form>
   </div>

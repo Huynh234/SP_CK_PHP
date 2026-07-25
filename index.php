@@ -5,7 +5,7 @@ if (dang_nhap()) {
     redirect('/' . $_SESSION['role'] . '/dashboard.php');
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (isset($_POST['btn_login'])) {
     csrf_check();
     $username = trim($_POST['username'] ?? '');
     $password = $_POST['password'] ?? '';
@@ -52,7 +52,7 @@ include './includes/header.php';
         <input type="password" name="password" required
           class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
       </div>
-      <button type="submit"
+      <button type="submit" name="btn_login"
         class="w-full bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-lg py-2.5 text-sm transition">
         Đăng nhập
       </button>
