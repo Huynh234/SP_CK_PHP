@@ -20,27 +20,40 @@ $lops = db_query("
 $page_title = 'Lớp của tôi';
 include '../includes/header.php';
 ?>
-<h1 class="text-xl font-bold text-slate-800 mb-1">Chào, <?= e($_SESSION['ho_ten']) ?> 👋</h1>
+<h1 class="text-xl font-bold text-slate-800 mb-1">Chào, <?php echo e($_SESSION['ho_ten']) ?> 👋</h1>
 <p class="text-sm text-slate-500 mb-6">Các lớp học phần bạn đang tham gia.</p>
 
 <div class="grid md:grid-cols-2 gap-4">
-  <?php foreach ($lops as $l): ?>
-  <a href="<?= BASE_URL ?>/sinhvien/lop.php?id=<?= $l['id'] ?>" class="block bg-white border border-slate-200 rounded-xl p-5 hover:border-brand-400 hover:shadow-sm transition">
-    <div class="flex items-center gap-2 mb-1">
-      <span class="font-mono text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded"><?= e($l['ma_lop']) ?></span>
-      <span class="font-semibold text-slate-800"><?= e($l['ten_lop']) ?></span>
-    </div>
-    <div class="text-xs text-slate-500"><?= e($l['ma_hp']) ?> — <?= e($l['ten_hp']) ?> · GV: <?= e($l['ten_gv'] ?: 'chưa gán') ?></div>
-    <div class="mt-3">
-      <?php if ($l['nhom_id']): ?>
-        <span class="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700">✓ Đã có nhóm</span>
-      <?php else: ?>
-        <span class="text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700">Chưa có nhóm</span>
-      <?php endif; ?>
-    </div>
-  </a>
-  <?php endforeach; ?>
-  <?php if (!$lops): ?><div class="text-slate-400 text-sm">Bạn chưa được thêm vào lớp học phần nào.</div><?php endif; ?>
+  <?php
+  foreach ($lops as $l) {
+    echo '<a href="' . BASE_URL . '/sinhvien/lop.php?id=' . $l['id'] . '" 
+             class="block bg-white border border-slate-200 rounded-xl p-5 hover:border-brand-400 hover:shadow-sm transition">';
+
+    echo '<div class="flex items-center gap-2 mb-1">';
+    echo '<span class="font-mono text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded">' . e($l['ma_lop']) . '</span>';
+    echo '<span class="font-semibold text-slate-800">' . e($l['ten_lop']) . '</span>';
+    echo '</div>';
+
+    echo '<div class="text-xs text-slate-500">'
+      . e($l['ma_hp']) . ' — ' . e($l['ten_hp'])
+      . ' · GV: ' . e($l['ten_gv'] ?: 'chưa gán')
+      . '</div>';
+
+    echo '<div class="mt-3">';
+    echo $l['nhom_id']
+      ? '<span class="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700">✓ Đã có nhóm</span>'
+      : '<span class="text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700">Chưa có nhóm</span>';
+    echo '</div>';
+
+    echo '</a>';
+  }
+  ?>
+  <?php
+  if (!$lops) {
+    echo '<div class="text-slate-400 text-sm">Bạn chưa được thêm vào lớp học phần nào.</div>';
+  }
+  ?>
+
 </div>
 
 <?php include '../includes/footer.php'; ?>

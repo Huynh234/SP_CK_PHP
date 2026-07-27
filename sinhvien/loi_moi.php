@@ -6,7 +6,7 @@ require_once '../includes/functions.php';
 require_role('sinhvien');
 $sv_id = $_SESSION['user_id'];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if (isset($_POST['update_'])) {
     csrf_check();
     $tv_id = (int)$_POST['tv_id'];
     $action = $_POST['action'];
@@ -57,23 +57,45 @@ include  '../includes/header.php';
 <h1 class="text-xl font-bold text-slate-800 mb-6">Lời mời vào nhóm</h1>
 
 <div class="grid gap-4 max-w-xl">
-  <?php foreach ($list as $it): ?>
-  <div class="bg-white border border-slate-200 rounded-xl p-5 flex items-center justify-between gap-3">
-    <div>
-      <div class="font-semibold text-slate-800"><?= e($it['ten_nhom']) ?></div>
-      <div class="text-xs text-slate-500"><?= e($it['ma_lop']) ?> - <?= e($it['ten_lop']) ?> · Trưởng nhóm: <?= e($it['ten_truong_nhom']) ?></div>
-    </div>
-    <div class="flex gap-2 shrink-0">
-      <form method="post"><?= csrf_field() ?><input type="hidden" name="tv_id" value="<?= $it['tv_id'] ?>"><input type="hidden" name="action" value="chap_nhan">
-        <button class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg">Chấp nhận</button>
-      </form>
-      <form method="post"><?= csrf_field() ?><input type="hidden" name="tv_id" value="<?= $it['tv_id'] ?>"><input type="hidden" name="action" value="tu_choi">
-        <button class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg">Từ chối</button>
-      </form>
-    </div>
-  </div>
-  <?php endforeach; ?>
-  <?php if (!$list): ?><div class="text-center text-slate-400 py-12">Bạn không có lời mời nào đang chờ.</div><?php endif; ?>
+    <?php
+    foreach ($list as $it) {
+        echo '<div class="bg-white border border-slate-200 rounded-xl p-5 flex items-center justify-between gap-3">';
+
+        echo '<div>';
+        echo '<div class="font-semibold text-slate-800">' . e($it['ten_nhom']) . '</div>';
+        echo '<div class="text-xs text-slate-500">'
+            . e($it['ma_lop']) . ' - ' . e($it['ten_lop'])
+            . ' · Trưởng nhóm: ' . e($it['ten_truong_nhom'])
+            . '</div>';
+        echo '</div>';
+
+        echo '<div class="flex gap-2 shrink-0">';
+
+        // Form chấp nhận
+        echo '<form method="post">' . csrf_field()
+            . '<input type="hidden" name="tv_id" value="' . $it['tv_id'] . '">'
+            . '<input type="hidden" name="action" value="chap_nhan">'
+            . '<button name="update_" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg">Chấp nhận</button>'
+            . '</form>';
+
+        // Form từ chối
+        echo '<form method="post">' . csrf_field()
+            . '<input type="hidden" name="tv_id" value="' . $it['tv_id'] . '">'
+            . '<input type="hidden" name="action" value="tu_choi">'
+            . '<button name="update_" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg">Từ chối</button>'
+            . '</form>';
+
+        echo '</div>'; // end flex
+        echo '</div>'; // end card
+    }
+    ?>
+
+    <?php
+    if (!$list) {
+        echo '<div class="text-center text-slate-400 py-12">Bạn không có lời mời nào đang chờ.</div>';
+    }
+    ?>
+
 </div>
 
 <?php include  '../includes/footer.php'; ?>

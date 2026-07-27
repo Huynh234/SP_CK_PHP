@@ -19,26 +19,27 @@ $lops = db_query("
 $page_title = 'Lớp của tôi';
 include '../includes/header.php';
 ?>
-<h1 class="text-xl font-bold text-slate-800 mb-1">Chào, <?= e($_SESSION['ho_ten']) ?> 👋</h1>
+<h1 class="text-xl font-bold text-slate-800 mb-1">Chào, <?php echo $_SESSION['ho_ten'] ?> 👋</h1>
 <p class="text-sm text-slate-500 mb-6">Các lớp học phần bạn đang phụ trách.</p>
 
 <div class="grid md:grid-cols-2 gap-4">
-  <?php foreach ($lops as $l): ?>
-  <a href="<?= BASE_URL ?>/giangvien/lop.php?id=<?= $l['id'] ?>" class="block bg-white border border-slate-200 rounded-xl p-5 hover:border-brand-400 hover:shadow-sm transition">
-    <div class="flex items-center gap-2 mb-1">
-      <span class="font-mono text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded"><?= e($l['ma_lop']) ?></span>
-      <span class="font-semibold text-slate-800"><?= e($l['ten_lop']) ?></span>
-    </div>
-    <div class="text-xs text-slate-500"><?= e($l['ma_hp']) ?> — <?= e($l['ten_hp']) ?> · <?= e($l['hoc_ky']) ?></div>
-    <div class="flex gap-4 text-xs text-slate-500 mt-3">
-      <span>👥 <?= $l['so_sv'] ?> sinh viên</span>
-      <span>🧩 <?= $l['so_nhom'] ?> nhóm</span>
-    </div>
-    <div class="text-xs text-slate-400 mt-2">
-      Hạn ĐK nhóm: <?= format_datetime($l['han_dang_ky_nhom']) ?>
-    </div>
-  </a>
-  <?php endforeach; ?>
+  <?php
+  foreach ($lops as $l) {
+    echo '<a href="' . BASE_URL . '/giangvien/lop.php?id=' . $l['id'] . '" class="block bg-white border border-slate-200 rounded-xl p-5 hover:border-brand-400 hover:shadow-sm transition">';
+    echo '<div class="flex items-center gap-2 mb-1">';
+    echo '<span class="font-mono text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded">' . $l['ma_lop'] . '</span>';
+    echo '<span class="font-semibold text-slate-800">' . $l['ten_lop'] . '</span>';
+    echo '</div>';
+    echo '<div class="text-xs text-slate-500">' . $l['ma_hp'] . ' — ' . $l['ten_hp'] . ' · ' . $l['hoc_ky'] . '</div>';
+    echo '<div class="flex gap-4 text-xs text-slate-500 mt-3">';
+    echo '<span>👥 ' . $l['so_sv'] . ' sinh viên</span>';
+    echo '<span>🧩 ' . $l['so_nhom'] . ' nhóm</span>';
+    echo '</div>';
+    echo '<div class="text-xs text-slate-400 mt-2">Hạn ĐK nhóm: ' . format_datetime($l['han_dang_ky_nhom']) . '</div>';
+    echo '</a>';
+  }
+  ?>
+
   <?php if (!$lops): ?><div class="text-slate-400 text-sm">Bạn chưa được phân công lớp nào. Liên hệ quản trị viên.</div><?php endif; ?>
 </div>
 
