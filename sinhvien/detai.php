@@ -153,107 +153,176 @@ $detais = db_query("
 
 $mucDichLabel = ['giua_ky' => 'Giữa kỳ', 'cuoi_ky' => 'Cuối kỳ', 'khac' => 'Khác'];
 
-$page_title = 'Chọn đề tài';
-include '../includes/header.php';
+$user = current_user();
 ?>
-<a href="<?php echo BASE_URL; ?>/sinhvien/nhom.php?id=<?php echo $nhom['id']; ?>" class="text-sm text-brand-600 hover:underline">← <?php echo $nhom['ten_nhom']; ?></a>
-<h1 class="text-xl font-bold text-slate-800 mt-2 mb-1">Chọn đề tài — <?php echo $dot['ten_dot'] ?></h1>
-<p class="text-sm text-slate-500 mb-6">
-  <?php echo $mucDichLabel[$dot['muc_dich']] ?> · Hạn đăng ký: <?php echo format_datetime($dot['han_dang_ky']) ?> ·
-  Nhóm cần tối thiểu <?php echo $dot['si_so_nhom_toi_thieu'] ?> thành viên (hiện có <?php echo $soThanhVien ?>)
-</p>
+<!DOCTYPE html>
+<html lang="vi">
 
-<?php
-if ($soThanhVien < $dot['si_so_nhom_toi_thieu']) {
-  echo '<div class="bg-amber-50 border border-amber-200 text-amber-700 text-sm rounded-xl p-4 mb-6">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><?php echo SITE_NAME ?></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              300: '#a5b4fc',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Be Vietnam Pro', sans-serif;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <?php if ($user) {
+    echo '<header class="bg-brand-700 text-white sticky top-0 z-30 shadow">';
+    echo '<div class="max-w-7xl mx-auto px-4 flex items-center justify-between h-14">';
+    echo '<div class="flex items-center gap-6">';
+    echo '<a href="' . BASE_URL . '/' . $user['role'] . '/dashboard.php" class="font-bold text-lg tracking-tight">';
+    echo '📚 QL Nhóm & Đề tài';
+    echo '</a>';
+    echo '<nav class="hidden md:flex items-center gap-1 text-sm">';
+    echo '<a href="' . BASE_URL . '/sinhvien/dashboard.php" class="px-3 py-2 rounded hover:bg-brand-600">Lớp của tôi</a>';
+    echo '<a href="' . BASE_URL . '/sinhvien/loi_moi.php" class="px-3 py-2 rounded hover:bg-brand-600">Lời mời nhóm</a>';
+    echo '</nav>';
+    echo '</div>';
+    echo '<div class="flex items-center gap-3 text-sm">';
+    echo '<span class="hidden sm:inline text-brand-100">' . $user['ho_ten'] . ' · <span class="uppercase text-xs bg-brand-800 px-2 py-0.5 rounded">' . $user['role'] . '</span></span>';
+    echo '<a href="' . BASE_URL . '/logout.php" class="bg-brand-800 hover:bg-brand-900 px-3 py-1.5 rounded transition">Đăng xuất</a>';
+    echo '</div>';
+    echo '</div>';
+    echo '</header>';
+  } ?>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
+    <?php $flash = get_flash();
+    if ($flash) {
+      echo '<div class="mb-4 rounded-lg px-4 py-3 text-sm font-medium
+      ' . ($flash['type'] === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200') . '">';
+      echo $flash['message'] . '</div>';
+    }
+    ?>
+    <a href="<?php echo BASE_URL; ?>/sinhvien/nhom.php?id=<?php echo $nhom['id']; ?>" class="text-sm text-brand-600 hover:underline">← <?php echo $nhom['ten_nhom']; ?></a>
+    <h1 class="text-xl font-bold text-slate-800 mt-2 mb-1">Chọn đề tài — <?php echo $dot['ten_dot'] ?></h1>
+    <p class="text-sm text-slate-500 mb-6">
+      <?php echo $mucDichLabel[$dot['muc_dich']] ?> · Hạn đăng ký: <?php echo format_datetime($dot['han_dang_ky']) ?> ·
+      Nhóm cần tối thiểu <?php echo $dot['si_so_nhom_toi_thieu'] ?> thành viên (hiện có <?php echo $soThanhVien ?>)
+    </p>
+
+    <?php
+    if ($soThanhVien < $dot['si_so_nhom_toi_thieu']) {
+      echo '<div class="bg-amber-50 border border-amber-200 text-amber-700 text-sm rounded-xl p-4 mb-6">
             Nhóm chưa đủ số lượng thành viên tối thiểu để đăng ký đề tài. Hãy mời thêm thành viên trước.
           </div>';
-}
+    }
 
-if ($dangSuaDeXuat) {
-  $dangCho = $dkHienTai['trang_thai'] === 'cho_duyet';
-  echo '<div class="border rounded-xl p-4 mb-6 '
-    . ($dangCho ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-sky-50 border-sky-200 text-sky-700')
-    . '">';
+    if ($dangSuaDeXuat) {
+      $dangCho = $dkHienTai['trang_thai'] === 'cho_duyet';
+      echo '<div class="border rounded-xl p-4 mb-6 '
+        . ($dangCho ? 'bg-amber-50 border-amber-200 text-amber-700' : 'bg-sky-50 border-sky-200 text-sky-700')
+        . '">';
 
-  echo '<div class="text-xs font-semibold mb-1">'
-    . ($dangCho ? 'Đề xuất đang chờ giảng viên duyệt' : 'Giảng viên yêu cầu điều chỉnh đề xuất này')
-    . '</div>';
+      echo '<div class="text-xs font-semibold mb-1">'
+        . ($dangCho ? 'Đề xuất đang chờ giảng viên duyệt' : 'Giảng viên yêu cầu điều chỉnh đề xuất này')
+        . '</div>';
 
-  if (!empty($dkHienTai['phan_hoi'])) {
-    echo '<p class="text-xs mt-1 italic">Phản hồi của giảng viên: "'
-      . $dkHienTai['phan_hoi']
-      . '"</p>';
-  }
+      if (!empty($dkHienTai['phan_hoi'])) {
+        echo '<p class="text-xs mt-1 italic">Phản hồi của giảng viên: "'
+          . $dkHienTai['phan_hoi']
+          . '"</p>';
+      }
 
-  echo '<p class="text-xs mt-2 opacity-80">
+      echo '<p class="text-xs mt-2 opacity-80">
             Nội dung đề xuất cũ đã được điền sẵn ở form bên dưới — sửa lại rồi gửi để giảng viên duyệt lại.
           </p>';
 
-  echo '</div>';
-}
-?>
-
-
-<h2 class="font-semibold text-slate-800 mb-3">Đề tài do giảng viên cung cấp</h2>
-<div class="grid gap-3 mb-8">
-  <?php
-  foreach ($detais as $d) {
-    echo '<div class="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between gap-3">';
-
-    echo '<div>';
-    echo '<div class="font-medium text-slate-800">' . $d['ten_detai'] . '</div>';
-    echo '<p class="text-sm text-slate-500 mt-0.5">' . nl2br($d['mo_ta']) . '</p>';
-    echo '<div class="text-xs text-slate-400 mt-1">Đã đăng ký: '
-      . $d['da_dk'] . '/' . $d['so_nhom_toi_da']
-      . ' nhóm (trong đợt này)</div>';
-    echo '</div>';
-
-    if ($d['da_dk'] < $d['so_nhom_toi_da'] && !is_qua_han($dot['han_dang_ky']) && $soThanhVien >= $dot['si_so_nhom_toi_thieu']) {
-      echo '<form method="post">' . csrf_field()
-        . '<input type="hidden" name="detai_id" value="' . $d['id'] . '">';
-      echo '<button name="dangky" class="text-sm bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg whitespace-nowrap">Đăng ký</button>';
-      echo '</form>';
-    } else {
-      echo '<span class="text-xs text-slate-400 whitespace-nowrap">Không thể đăng ký</span>';
+      echo '</div>';
     }
+    ?>
 
-    echo '</div>';
-  }
-  ?>
 
-  <?php
-  if (!$detais) {
-    echo '<div class="text-slate-400 text-sm">Giảng viên chưa cung cấp đề tài nào cho đợt này.</div>';
-  }
-  ?>
+    <h2 class="font-semibold text-slate-800 mb-3">Đề tài do giảng viên cung cấp</h2>
+    <div class="grid gap-3 mb-8">
+      <?php
+      foreach ($detais as $d) {
+        echo '<div class="bg-white border border-slate-200 rounded-xl p-4 flex items-center justify-between gap-3">';
 
-</div>
+        echo '<div>';
+        echo '<div class="font-medium text-slate-800">' . $d['ten_detai'] . '</div>';
+        echo '<p class="text-sm text-slate-500 mt-0.5">' . nl2br($d['mo_ta']) . '</p>';
+        echo '<div class="text-xs text-slate-400 mt-1">Đã đăng ký: '
+          . $d['da_dk'] . '/' . $d['so_nhom_toi_da']
+          . ' nhóm (trong đợt này)</div>';
+        echo '</div>';
 
-<h2 class="font-semibold text-slate-800 mb-3">
-  <?php echo $dangSuaDeXuat ? 'Sửa lại đề xuất của nhóm' : 'Hoặc tự đề xuất đề tài mới cho đợt này' ?>
-</h2>
-<div class="bg-white border border-slate-200 rounded-xl p-5 max-w-lg">
-  <form method="post" class="space-y-3">
-    <?php echo csrf_field() ?>
-    <div>
-      <label class="block text-xs font-medium text-slate-600 mb-1">Tên đề tài đề xuất *</label>
-      <input name="ten_detai" required value="<?php echo $detaiHienTai['ten_detai'] ?? '' ?>" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+        if ($d['da_dk'] < $d['so_nhom_toi_da'] && !is_qua_han($dot['han_dang_ky']) && $soThanhVien >= $dot['si_so_nhom_toi_thieu']) {
+          echo '<form method="post">' . csrf_field()
+            . '<input type="hidden" name="detai_id" value="' . $d['id'] . '">';
+          echo '<button name="dangky" class="text-sm bg-brand-600 hover:bg-brand-700 text-white px-4 py-2 rounded-lg whitespace-nowrap">Đăng ký</button>';
+          echo '</form>';
+        } else {
+          echo '<span class="text-xs text-slate-400 whitespace-nowrap">Không thể đăng ký</span>';
+        }
+
+        echo '</div>';
+      }
+      ?>
+
+      <?php
+      if (!$detais) {
+        echo '<div class="text-slate-400 text-sm">Giảng viên chưa cung cấp đề tài nào cho đợt này.</div>';
+      }
+      ?>
+
     </div>
-    <div>
-      <label class="block text-xs font-medium text-slate-600 mb-1">Mô tả</label>
-      <textarea name="mo_ta" rows="3" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"><?php echo $detaiHienTai['mo_ta'] ?? '' ?></textarea>
-    </div>
-    <button name="de_xuat" <?php echo is_qua_han($dot['han_dang_ky']) || $soThanhVien < $dot['si_so_nhom_toi_thieu'] ? 'disabled' : '' ?>
-      class="bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 text-white text-sm px-4 py-2 rounded-lg">
-      <?php echo $dangSuaDeXuat ? 'Cập nhật đề xuất (gửi lại chờ duyệt)' : 'Gửi đề xuất (chờ GV duyệt)' ?>
-    </button>
-  </form>
-</div>
 
-</main>
-<footer class="text-center text-xs text-slate-400 py-4">
-  sản phẩm cuối kỳ Công nghệ Web
-</footer>
+    <h2 class="font-semibold text-slate-800 mb-3">
+      <?php echo $dangSuaDeXuat ? 'Sửa lại đề xuất của nhóm' : 'Hoặc tự đề xuất đề tài mới cho đợt này' ?>
+    </h2>
+    <div class="bg-white border border-slate-200 rounded-xl p-5 max-w-lg">
+      <form method="post" class="space-y-3">
+        <?php echo csrf_field() ?>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Tên đề tài đề xuất *</label>
+          <input name="ten_detai" required value="<?php echo $detaiHienTai['ten_detai'] ?? '' ?>" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-600 mb-1">Mô tả</label>
+          <textarea name="mo_ta" rows="3" class="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"><?php echo $detaiHienTai['mo_ta'] ?? '' ?></textarea>
+        </div>
+        <button name="de_xuat" <?php echo is_qua_han($dot['han_dang_ky']) || $soThanhVien < $dot['si_so_nhom_toi_thieu'] ? 'disabled' : '' ?>
+          class="bg-brand-600 hover:bg-brand-700 disabled:bg-slate-300 text-white text-sm px-4 py-2 rounded-lg">
+          <?php echo $dangSuaDeXuat ? 'Cập nhật đề xuất (gửi lại chờ duyệt)' : 'Gửi đề xuất (chờ GV duyệt)' ?>
+        </button>
+      </form>
+    </div>
+
+  </main>
+  <footer class="text-center text-xs text-slate-400 py-4">
+    sản phẩm cuối kỳ Công nghệ Web
+  </footer>
 </body>
+
 </html>

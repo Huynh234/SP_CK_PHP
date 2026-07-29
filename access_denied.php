@@ -12,4 +12,9 @@ include './includes/header.php';
   <h1 class="text-xl font-bold text-slate-800">Bạn không có quyền truy cập trang này</h1>
   <a href="<?php echo BASE_URL ?>/<?php echo $_SESSION['role'] ?>/dashboard.php" class="inline-block mt-4 text-brand-600 hover:underline">← Quay lại trang chính</a>
 </div>
-<?php include './includes/footer.php'; ?>
+</main>
+<footer class="text-center text-xs text-slate-400 py-4">
+  sản phẩm cuối kỳ Công nghệ Web
+</footer>
+</body>
+</html>

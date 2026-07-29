@@ -1,8 +1,8 @@
 <?php
 require_once '../config/config.php';
 require_once '../config/database.php';
-require_once '../includes/auth.php';
-require_once '../includes/functions.php';
+require_once '../config/auth.php';
+require_once '../config/functions.php';
 require_role('sinhvien');
 $sv_id = $_SESSION['user_id'];
 
@@ -106,40 +106,193 @@ foreach ($dots as &$dot) {
 }
 unset($dot);
 
-$page_title = 'Nhóm của tôi';
-include '../includes/header.php';
+$user = current_user();
 ?>
-<a href="<?php echo BASE_URL ?>/sinhvien/dashboard.php" class="text-sm text-brand-600 hover:underline">← <?php echo $nhom['ma_lop'] ?></a>
-<h1 class="text-xl font-bold text-slate-800 mt-2 mb-6"><?php echo $nhom['ten_nhom'] ?> <?php echo $isLeader ? '<span class="text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full align-middle">Trưởng nhóm</span>' : '' ?></h1>
+<!DOCTYPE html>
+<html lang="vi">
 
-<div class="grid md:grid-cols-2 gap-6">
-  <div class="space-y-6">
-    <div class="bg-white border border-slate-200 rounded-xl p-5">
-      <h2 class="font-semibold text-slate-800 mb-3 text-sm">Thành viên (<?php echo count(array_filter($thanhvien, fn($t) => $t['trang_thai'] === 'da_xac_nhan')) ?>/<?php echo $nhom['si_so_nhom_toi_da'] ?>)</h2>
-      <div class="space-y-2">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><?php echo SITE_NAME ?></title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              200: '#c7d2fe',
+              300: '#a5b4fc',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              800: '#3730a3',
+              900: '#312e81'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Be Vietnam Pro', sans-serif;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+  <?php if ($user) {
+    echo '<header class="bg-brand-700 text-white sticky top-0 z-30 shadow">';
+    echo '<div class="max-w-7xl mx-auto px-4 flex items-center justify-between h-14">';
+    echo '<div class="flex items-center gap-6">';
+    echo '<a href="' . BASE_URL . '/' . $user['role'] . '/dashboard.php" class="font-bold text-lg tracking-tight">';
+    echo '📚 QL Nhóm & Đề tài';
+    echo '</a>';
+    echo '<nav class="hidden md:flex items-center gap-1 text-sm">';
+    echo '<a href="' . BASE_URL . '/sinhvien/dashboard.php" class="px-3 py-2 rounded hover:bg-brand-600">Lớp của tôi</a>';
+    echo '<a href="' . BASE_URL . '/sinhvien/loi_moi.php" class="px-3 py-2 rounded hover:bg-brand-600">Lời mời nhóm</a>';
+    echo '</nav>';
+    echo '</div>';
+    echo '<div class="flex items-center gap-3 text-sm">';
+    echo '<span class="hidden sm:inline text-brand-100">' . $user['ho_ten'] . ' · <span class="uppercase text-xs bg-brand-800 px-2 py-0.5 rounded">' . $user['role'] . '</span></span>';
+    echo '<a href="' . BASE_URL . '/logout.php" class="bg-brand-800 hover:bg-brand-900 px-3 py-1.5 rounded transition">Đăng xuất</a>';
+    echo '</div>';
+    echo '</div>';
+    echo '</header>';
+  } ?>
+
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 py-6">
+    <?php $flash = get_flash();
+    if ($flash) {
+      echo '<div class="mb-4 rounded-lg px-4 py-3 text-sm font-medium
+      ' . ($flash['type'] === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200') . '">';
+      echo $flash['message'] . '</div>';
+    }
+    ?>
+    <a href="<?php echo BASE_URL ?>/sinhvien/dashboard.php" class="text-sm text-brand-600 hover:underline">← <?php echo $nhom['ma_lop'] ?></a>
+    <h1 class="text-xl font-bold text-slate-800 mt-2 mb-6"><?php echo $nhom['ten_nhom'] ?> <?php echo $isLeader ? '<span class="text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full align-middle">Trưởng nhóm</span>' : '' ?></h1>
+
+    <div class="grid md:grid-cols-2 gap-6">
+      <div class="space-y-6">
+        <div class="bg-white border border-slate-200 rounded-xl p-5">
+          <h2 class="font-semibold text-slate-800 mb-3 text-sm">Thành viên (<?php echo count(array_filter($thanhvien, fn($t) => $t['trang_thai'] === 'da_xac_nhan')) ?>/<?php echo $nhom['si_so_nhom_toi_da'] ?>)</h2>
+          <div class="space-y-2">
+            <?php
+            foreach ($thanhvien as $t) {
+              echo '<div class="flex items-center justify-between text-sm">';
+
+              echo '<div>';
+              echo $t['ho_ten'] . ' <span class="text-xs text-slate-400">(' . $t['mssv_mgv'] . ')</span>';
+              echo $t['sinhvien_id'] == $nhom['truong_nhom_id']
+                ? '<span class="text-xs text-brand-600">· trưởng nhóm</span>'
+                : '';
+              echo '</div>';
+
+              if ($t['trang_thai'] === 'cho_xac_nhan') {
+                echo '<div class="flex items-center gap-2">';
+                echo '<span class="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">chờ chấp nhận</span>';
+
+                if ($isLeader) {
+                  echo '<form method="post">' . csrf_field()
+                    . '<input type="hidden" name="sinhvien_id" value="' . $t['sinhvien_id'] . '">'
+                    . '<button name="huy_moi" class="text-xs text-rose-500 hover:text-rose-700">huỷ</button>'
+                    . '</form>';
+                }
+                echo '</div>';
+              }
+              echo '</div>';
+            }
+            ?>
+
+          </div>
+        </div>
+
         <?php
-        foreach ($thanhvien as $t) {
-          echo '<div class="flex items-center justify-between text-sm">';
+        if ($isLeader && !is_qua_han($nhom['han_dang_ky_nhom'])) {
+          echo '<div class="bg-white border border-slate-200 rounded-xl p-5">';
+          echo '<h2 class="font-semibold text-slate-800 mb-3 text-sm">Mời thành viên</h2>';
 
-          echo '<div>';
-          echo $t['ho_ten'] . ' <span class="text-xs text-slate-400">(' . $t['mssv_mgv'] . ')</span>';
-          echo $t['sinhvien_id'] == $nhom['truong_nhom_id']
-            ? '<span class="text-xs text-brand-600">· trưởng nhóm</span>'
-            : '';
+          if ($avail) {
+            echo '<form method="post" class="flex gap-2">'
+              . csrf_field()
+              . '<select name="sinhvien_id" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm">';
+
+            foreach ($avail as $a) {
+              echo '<option value="' . $a['id'] . '">'
+                . $a['ho_ten'] . ' (' . $a['mssv_mgv'] . ')'
+                . '</option>';
+            }
+
+            echo '</select>';
+            echo '<button name="moi" class="bg-brand-600 hover:bg-brand-700 text-white text-sm px-3 py-2 rounded-lg">Mời</button>';
+            echo '</form>';
+          } else {
+            echo '<p class="text-xs text-slate-400">Không còn bạn cùng lớp nào để mời (hoặc nhóm đã đủ số lượng).</p>';
+          }
+
+          echo '</div>';
+        }
+        ?>
+
+      </div>
+
+      <div class="space-y-4">
+        <?php
+        if (!$dots) {
+          echo '<div class="bg-white border border-slate-200 rounded-xl p-5 text-sm text-slate-500">
+            Giảng viên chưa mở đợt đăng ký đề tài nào cho lớp này.
+          </div>';
+        }
+        ?>
+        <?php
+        foreach ($dots as $dot) {
+          $dk = $dot['dangky'];
+          echo '<div class="bg-white border border-slate-200 rounded-xl p-5">';
+
+          echo '<div class="flex items-center justify-between mb-2">';
+          echo '<h2 class="font-semibold text-slate-800 text-sm">' . $dot['ten_dot'] . '</h2>';
+          echo '<span class="text-xs text-slate-400">'
+            . $mucDichLabel[$dot['muc_dich']]
+            . ' · hạn ' . format_datetime($dot['han_dang_ky'])
+            . '</span>';
           echo '</div>';
 
-          if ($t['trang_thai'] === 'cho_xac_nhan') {
-            echo '<div class="flex items-center gap-2">';
-            echo '<span class="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">chờ chấp nhận</span>';
+          if ($dk) {
+            echo '<div class="font-medium text-slate-800 text-sm">' . $dk['ten_detai'] . '</div>';
+            echo '<p class="text-sm text-slate-500 mt-1">' . nl2br($dk['mo_ta']) . '</p>';
+            echo '<span class="inline-block text-xs px-2 py-0.5 rounded-full '
+              . $trangThaiMau[$dk['trang_thai']]
+              . ' mt-2">' . $trangThaiLabel[$dk['trang_thai']] . '</span>';
+
+            if ($dk['phan_hoi']) {
+              echo '<p class="text-xs text-slate-500 mt-2 italic">Phản hồi GV: "'
+                . $dk['phan_hoi']
+                . '"</p>';
+            }
+
+            if (in_array($dk['trang_thai'], ['tu_choi', 'yeu_cau_dieu_chinh'], true) && $isLeader) {
+              echo '<a href="' . BASE_URL . '/sinhvien/detai.php?dot_id=' . $dot['id']
+                . '" class="inline-block mt-3 text-xs text-brand-600 hover:underline">→ Chọn/đề xuất đề tài khác cho đợt này</a>';
+            }
+          } else {
+            echo '<p class="text-sm text-slate-500 mb-2">Nhóm chưa đăng ký đề tài cho đợt này.</p>';
 
             if ($isLeader) {
-              echo '<form method="post">' . csrf_field()
-                . '<input type="hidden" name="sinhvien_id" value="' . $t['sinhvien_id'] . '">'
-                . '<button name="huy_moi" class="text-xs text-rose-500 hover:text-rose-700">huỷ</button>'
-                . '</form>';
+              echo '<a href="' . BASE_URL . '/sinhvien/detai.php?dot_id=' . $dot['id']
+                . '" class="inline-block bg-brand-600 hover:bg-brand-700 text-white text-xs px-3 py-1.5 rounded-lg">Chọn đề tài →</a>';
+            } else {
+              echo '<p class="text-xs text-slate-400">Chỉ trưởng nhóm được đăng ký đề tài.</p>';
             }
-            echo '</div>';
           }
+
           echo '</div>';
         }
         ?>
@@ -147,94 +300,10 @@ include '../includes/header.php';
       </div>
     </div>
 
-    <?php
-    if ($isLeader && !is_qua_han($nhom['han_dang_ky_nhom'])) {
-      echo '<div class="bg-white border border-slate-200 rounded-xl p-5">';
-      echo '<h2 class="font-semibold text-slate-800 mb-3 text-sm">Mời thành viên</h2>';
-
-      if ($avail) {
-        echo '<form method="post" class="flex gap-2">'
-          . csrf_field()
-          . '<select name="sinhvien_id" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm">';
-
-        foreach ($avail as $a) {
-          echo '<option value="' . $a['id'] . '">'
-            . $a['ho_ten'] . ' (' . $a['mssv_mgv'] . ')'
-            . '</option>';
-        }
-
-        echo '</select>';
-        echo '<button name="moi" class="bg-brand-600 hover:bg-brand-700 text-white text-sm px-3 py-2 rounded-lg">Mời</button>';
-        echo '</form>';
-      } else {
-        echo '<p class="text-xs text-slate-400">Không còn bạn cùng lớp nào để mời (hoặc nhóm đã đủ số lượng).</p>';
-      }
-
-      echo '</div>';
-    }
-    ?>
-
-  </div>
-
-  <div class="space-y-4">
-    <?php
-    if (!$dots) {
-      echo '<div class="bg-white border border-slate-200 rounded-xl p-5 text-sm text-slate-500">
-            Giảng viên chưa mở đợt đăng ký đề tài nào cho lớp này.
-          </div>';
-    }
-    ?>
-    <?php
-    foreach ($dots as $dot) {
-      $dk = $dot['dangky'];
-      echo '<div class="bg-white border border-slate-200 rounded-xl p-5">';
-
-      echo '<div class="flex items-center justify-between mb-2">';
-      echo '<h2 class="font-semibold text-slate-800 text-sm">' . $dot['ten_dot'] . '</h2>';
-      echo '<span class="text-xs text-slate-400">'
-        . $mucDichLabel[$dot['muc_dich']]
-        . ' · hạn ' . format_datetime($dot['han_dang_ky'])
-        . '</span>';
-      echo '</div>';
-
-      if ($dk) {
-        echo '<div class="font-medium text-slate-800 text-sm">' . $dk['ten_detai'] . '</div>';
-        echo '<p class="text-sm text-slate-500 mt-1">' . nl2br($dk['mo_ta']) . '</p>';
-        echo '<span class="inline-block text-xs px-2 py-0.5 rounded-full '
-          . $trangThaiMau[$dk['trang_thai']]
-          . ' mt-2">' . $trangThaiLabel[$dk['trang_thai']] . '</span>';
-
-        if ($dk['phan_hoi']) {
-          echo '<p class="text-xs text-slate-500 mt-2 italic">Phản hồi GV: "'
-            . $dk['phan_hoi']
-            . '"</p>';
-        }
-
-        if (in_array($dk['trang_thai'], ['tu_choi', 'yeu_cau_dieu_chinh'], true) && $isLeader) {
-          echo '<a href="' . BASE_URL . '/sinhvien/detai.php?dot_id=' . $dot['id']
-            . '" class="inline-block mt-3 text-xs text-brand-600 hover:underline">→ Chọn/đề xuất đề tài khác cho đợt này</a>';
-        }
-      } else {
-        echo '<p class="text-sm text-slate-500 mb-2">Nhóm chưa đăng ký đề tài cho đợt này.</p>';
-
-        if ($isLeader) {
-          echo '<a href="' . BASE_URL . '/sinhvien/detai.php?dot_id=' . $dot['id']
-            . '" class="inline-block bg-brand-600 hover:bg-brand-700 text-white text-xs px-3 py-1.5 rounded-lg">Chọn đề tài →</a>';
-        } else {
-          echo '<p class="text-xs text-slate-400">Chỉ trưởng nhóm được đăng ký đề tài.</p>';
-        }
-      }
-
-      echo '</div>';
-    }
-    ?>
-
-  </div>
-</div>
-
-</main>
-<footer class="text-center text-xs text-slate-400 py-4">
-  sản phẩm cuối kỳ Công nghệ Web
-</footer>
+  </main>
+  <footer class="text-center text-xs text-slate-400 py-4">
+    sản phẩm cuối kỳ Công nghệ Web
+  </footer>
 </body>
+
 </html>
