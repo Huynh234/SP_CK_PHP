@@ -1,8 +1,8 @@
 <?php
 require_once '../config/config.php';
 require_once '../config/database.php';
-require_once '../includes/auth.php';
-require_once '../includes/functions.php';
+require_once '../config/auth.php';
+require_once '../config/functions.php';
 require_role('giangvien');
 
 $gv_id = $_SESSION['user_id'];
