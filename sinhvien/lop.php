@@ -58,8 +58,8 @@ include '../includes/header.php';
 ?>
 <a href="<?php echo BASE_URL ?>/sinhvien/dashboard.php" class="text-sm text-brand-600 hover:underline">← Lớp của tôi</a>
 <div class="flex items-center gap-2 mt-2 mb-6">
-  <span class="font-mono text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded"><?php echo e($lop['ma_lop']) ?></span>
-  <h1 class="text-xl font-bold text-slate-800"><?php echo e($lop['ten_lop']) ?></h1>
+  <span class="font-mono text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded"><?php echo $lop['ma_lop'] ?></span>
+  <h1 class="text-xl font-bold text-slate-800"><?php echo $lop['ten_lop'] ?></h1>
 </div>
 
 <div class="max-w-md">
@@ -94,4 +94,9 @@ include '../includes/header.php';
 
 </div>
 
-<?php include '../includes/footer.php'; ?>
+</main>
+<footer class="text-center text-xs text-slate-400 py-4">
+  sản phẩm cuối kỳ Công nghệ Web
+</footer>
+</body>
+</html>

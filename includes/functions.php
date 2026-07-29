@@ -23,11 +23,6 @@ function get_flash(): ?array
     return $f;
 }
 
-function e(?string $str): string
-{
-    return htmlspecialchars($str ?? '', ENT_QUOTES, 'UTF-8');
-}
-
 function format_datetime(?string $dt): string
 {
     if (!$dt) return '—';

@@ -54,4 +54,9 @@ include '../includes/header.php';
   </a>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+</main>
+<footer class="text-center text-xs text-slate-400 py-4">
+  sản phẩm cuối kỳ Công nghệ Web
+</footer>
+</body>
+</html>

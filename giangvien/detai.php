@@ -274,8 +274,8 @@ $dotCheckboxes = function () use ($dots) {
       <div class="text-xs text-slate-400">
         <p class="font-medium mb-1">Ví dụ nội dung file CSV:</p>
         <pre class="bg-slate-100 rounded-lg p-3 overflow-x-auto">ten_detai,mo_ta,so_nhom_toi_da
-Website bán hàng,Xây dựng website TMĐT cơ bản,2
-Ứng dụng quản lý thư viện,Quản lý mượn trả sách,1</pre>
+              Website bán hàng,Xây dựng website TMĐT cơ bản,2
+              Ứng dụng quản lý thư viện,Quản lý mượn trả sách,1</pre>
       </div>
       <div class="flex justify-end gap-2 pt-2">
         <button type="button" onclick="document.getElementById('modalCsv').classList.add('hidden')" class="px-4 py-2 text-sm rounded-lg text-slate-500 hover:bg-slate-100">Huỷ</button>
@@ -285,4 +285,9 @@ Website bán hàng,Xây dựng website TMĐT cơ bản,2
   </div>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+</main>
+<footer class="text-center text-xs text-slate-400 py-4">
+  sản phẩm cuối kỳ Công nghệ Web
+</footer>
+</body>
+</html>

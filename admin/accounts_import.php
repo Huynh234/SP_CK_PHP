@@ -103,5 +103,9 @@ include '../includes/header.php';
     <button name="import" class="bg-brand-600 hover:bg-brand-700 text-white text-sm px-4 py-2 rounded-lg">Import</button>
   </form>
 </div>
-
-<?php include '../includes/footer.php'; ?>
+</main>
+<footer class="text-center text-xs text-slate-400 py-4">
+  sản phẩm cuối kỳ Công nghệ Web
+</footer>
+</body>
+</html>

@@ -40,7 +40,12 @@ include '../includes/header.php';
   }
   ?>
 
-  <?php if (!$lops): ?><div class="text-slate-400 text-sm">Bạn chưa được phân công lớp nào. Liên hệ quản trị viên.</div><?php endif; ?>
+  <?php if (!$lops){echo '<div class="text-slate-400 text-sm">Bạn chưa được phân công lớp nào. Liên hệ quản trị viên.</div>'; } ?>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+</main>
+<footer class="text-center text-xs text-slate-400 py-4">
+  sản phẩm cuối kỳ Công nghệ Web
+</footer>
+</body>
+</html>

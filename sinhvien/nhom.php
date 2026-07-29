@@ -109,8 +109,8 @@ unset($dot);
 $page_title = 'Nhóm của tôi';
 include '../includes/header.php';
 ?>
-<a href="<?php echo BASE_URL ?>/sinhvien/dashboard.php" class="text-sm text-brand-600 hover:underline">← <?php echo e($nhom['ma_lop']) ?></a>
-<h1 class="text-xl font-bold text-slate-800 mt-2 mb-6"><?php echo e($nhom['ten_nhom']) ?> <?php echo $isLeader ? '<span class="text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full align-middle">Trưởng nhóm</span>' : '' ?></h1>
+<a href="<?php echo BASE_URL ?>/sinhvien/dashboard.php" class="text-sm text-brand-600 hover:underline">← <?php echo $nhom['ma_lop'] ?></a>
+<h1 class="text-xl font-bold text-slate-800 mt-2 mb-6"><?php echo $nhom['ten_nhom'] ?> <?php echo $isLeader ? '<span class="text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded-full align-middle">Trưởng nhóm</span>' : '' ?></h1>
 
 <div class="grid md:grid-cols-2 gap-6">
   <div class="space-y-6">
@@ -122,7 +122,7 @@ include '../includes/header.php';
           echo '<div class="flex items-center justify-between text-sm">';
 
           echo '<div>';
-          echo e($t['ho_ten']) . ' <span class="text-xs text-slate-400">(' . e($t['mssv_mgv']) . ')</span>';
+          echo $t['ho_ten'] . ' <span class="text-xs text-slate-400">(' . $t['mssv_mgv'] . ')</span>';
           echo $t['sinhvien_id'] == $nhom['truong_nhom_id']
             ? '<span class="text-xs text-brand-600">· trưởng nhóm</span>'
             : '';
@@ -159,7 +159,7 @@ include '../includes/header.php';
 
         foreach ($avail as $a) {
           echo '<option value="' . $a['id'] . '">'
-            . e($a['ho_ten']) . ' (' . e($a['mssv_mgv']) . ')'
+            . $a['ho_ten'] . ' (' . $a['mssv_mgv'] . ')'
             . '</option>';
         }
 
@@ -190,7 +190,7 @@ include '../includes/header.php';
       echo '<div class="bg-white border border-slate-200 rounded-xl p-5">';
 
       echo '<div class="flex items-center justify-between mb-2">';
-      echo '<h2 class="font-semibold text-slate-800 text-sm">' . e($dot['ten_dot']) . '</h2>';
+      echo '<h2 class="font-semibold text-slate-800 text-sm">' . $dot['ten_dot'] . '</h2>';
       echo '<span class="text-xs text-slate-400">'
         . $mucDichLabel[$dot['muc_dich']]
         . ' · hạn ' . format_datetime($dot['han_dang_ky'])
@@ -198,15 +198,15 @@ include '../includes/header.php';
       echo '</div>';
 
       if ($dk) {
-        echo '<div class="font-medium text-slate-800 text-sm">' . e($dk['ten_detai']) . '</div>';
-        echo '<p class="text-sm text-slate-500 mt-1">' . nl2br(e($dk['mo_ta'])) . '</p>';
+        echo '<div class="font-medium text-slate-800 text-sm">' . $dk['ten_detai'] . '</div>';
+        echo '<p class="text-sm text-slate-500 mt-1">' . nl2br($dk['mo_ta']) . '</p>';
         echo '<span class="inline-block text-xs px-2 py-0.5 rounded-full '
           . $trangThaiMau[$dk['trang_thai']]
           . ' mt-2">' . $trangThaiLabel[$dk['trang_thai']] . '</span>';
 
         if ($dk['phan_hoi']) {
           echo '<p class="text-xs text-slate-500 mt-2 italic">Phản hồi GV: "'
-            . e($dk['phan_hoi'])
+            . $dk['phan_hoi']
             . '"</p>';
         }
 
@@ -232,4 +232,9 @@ include '../includes/header.php';
   </div>
 </div>
 
-<?php include '../includes/footer.php'; ?>
+</main>
+<footer class="text-center text-xs text-slate-400 py-4">
+  sản phẩm cuối kỳ Công nghệ Web
+</footer>
+</body>
+</html>

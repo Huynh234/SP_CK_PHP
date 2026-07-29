@@ -1,5 +1,8 @@
 <?php
-require_once './includes/bootstrap.php';
+require_once './config/config.php';
+require_once './config/database.php';
+require_once './includes/auth.php';
+require_once './includes/functions.php';
 session_destroy();
-header('Location: ' . BASE_URL . '/index.php');
+redirect('/index.php');
 exit;

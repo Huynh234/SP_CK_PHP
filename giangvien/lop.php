@@ -282,7 +282,7 @@ include '../includes/header.php';
     foreach ($dots as $dot) {
       echo '<div class="flex items-center justify-between py-1 text-xs border-b border-slate-100 last:border-0">';
       echo '<div>';
-      echo '<span class="font-medium text-slate-700">' . e($dot['ten_dot']) . '</span> ';
+      echo '<span class="font-medium text-slate-700">' . $dot['ten_dot'] . '</span> ';
       echo '<span class="text-slate-400">(' . $mucDichLabel[$dot['muc_dich']] . ')</span> — ';
       echo '<span class="' . (is_qua_han($dot['han_dang_ky']) ? 'text-rose-500' : 'text-slate-500') . '">';
       echo format_datetime($dot['han_dang_ky']);
@@ -371,7 +371,7 @@ include '../includes/header.php';
       echo '<div class="grid md:grid-cols-2 gap-4">';
       foreach ($dots as $dot) {
         echo '<div class="bg-white border border-slate-200 rounded-xl p-4 text-sm">';
-        echo '<div class="font-medium text-slate-700">' . e($dot['ten_dot']) .
+        echo '<div class="font-medium text-slate-700">' . $dot['ten_dot'] .
           ' <span class="text-xs text-slate-400">(' . $mucDichLabel[$dot['muc_dich']] . ')</span></div>';
         echo '<div class="text-xs text-slate-500 mt-1">Hạn: ' . format_datetime($dot['han_dang_ky']) . '</div>';
 
@@ -397,7 +397,7 @@ include '../includes/header.php';
     <div id="modalSettings" class="hidden fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-40">
       <div class="bg-white rounded-xl p-6 w-full max-w-md">
         <h2 class="font-bold text-slate-800 mb-1">Sửa điều kiện nhóm & hạn đăng ký nhóm</h2>
-        <p class="text-xs text-slate-500 mb-4">Áp dụng cho lớp <?php echo e($lop['ma_lop']) ?>.</p>
+        <p class="text-xs text-slate-500 mb-4">Áp dụng cho lớp <?php echo $lop['ma_lop'] ?>.</p>
         <form method="post" class="space-y-3">
           <?php echo csrf_field() ?>
           <div class="grid grid-cols-2 gap-3">
@@ -480,4 +480,9 @@ include '../includes/header.php';
       </div>
     </div>
 
-    <?php include '../includes/footer.php'; ?>
+</main>
+<footer class="text-center text-xs text-slate-400 py-4">
+  sản phẩm cuối kỳ Công nghệ Web
+</footer>
+</body>
+</html>

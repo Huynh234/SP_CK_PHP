@@ -20,7 +20,7 @@ $lops = db_query("
 $page_title = 'Lớp của tôi';
 include '../includes/header.php';
 ?>
-<h1 class="text-xl font-bold text-slate-800 mb-1">Chào, <?php echo e($_SESSION['ho_ten']) ?> 👋</h1>
+<h1 class="text-xl font-bold text-slate-800 mb-1">Chào, <?php echo $_SESSION['ho_ten'] ?> 👋</h1>
 <p class="text-sm text-slate-500 mb-6">Các lớp học phần bạn đang tham gia.</p>
 
 <div class="grid md:grid-cols-2 gap-4">
@@ -30,13 +30,13 @@ include '../includes/header.php';
              class="block bg-white border border-slate-200 rounded-xl p-5 hover:border-brand-400 hover:shadow-sm transition">';
 
     echo '<div class="flex items-center gap-2 mb-1">';
-    echo '<span class="font-mono text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded">' . e($l['ma_lop']) . '</span>';
-    echo '<span class="font-semibold text-slate-800">' . e($l['ten_lop']) . '</span>';
+    echo '<span class="font-mono text-xs bg-brand-50 text-brand-700 px-2 py-0.5 rounded">' . $l['ma_lop'] . '</span>';
+    echo '<span class="font-semibold text-slate-800">' . $l['ten_lop'] . '</span>';
     echo '</div>';
 
     echo '<div class="text-xs text-slate-500">'
-      . e($l['ma_hp']) . ' — ' . e($l['ten_hp'])
-      . ' · GV: ' . e($l['ten_gv'] ?: 'chưa gán')
+      . $l['ma_hp'] . ' — ' . $l['ten_hp']  
+      . ' · GV: ' . $l['ten_gv'] ?: 'chưa gán'
       . '</div>';
 
     echo '<div class="mt-3">';
@@ -56,4 +56,9 @@ include '../includes/header.php';
 
 </div>
 
-<?php include '../includes/footer.php'; ?>
+</main>
+<footer class="text-center text-xs text-slate-400 py-4">
+  sản phẩm cuối kỳ Công nghệ Web
+</footer>
+</body>
+</html>

@@ -62,10 +62,10 @@ include  '../includes/header.php';
         echo '<div class="bg-white border border-slate-200 rounded-xl p-5 flex items-center justify-between gap-3">';
 
         echo '<div>';
-        echo '<div class="font-semibold text-slate-800">' . e($it['ten_nhom']) . '</div>';
+        echo '<div class="font-semibold text-slate-800">' . $it['ten_nhom'] . '</div>';
         echo '<div class="text-xs text-slate-500">'
-            . e($it['ma_lop']) . ' - ' . e($it['ten_lop'])
-            . ' · Trưởng nhóm: ' . e($it['ten_truong_nhom'])
+            . $it['ma_lop'] . ' - ' . $it['ten_lop']
+            . ' · Trưởng nhóm: ' . $it['ten_truong_nhom']
             . '</div>';
         echo '</div>';
 
@@ -98,4 +98,9 @@ include  '../includes/header.php';
 
 </div>
 
-<?php include  '../includes/footer.php'; ?>
+</main>
+<footer class="text-center text-xs text-slate-400 py-4">
+  sản phẩm cuối kỳ Công nghệ Web
+</footer>
+</body>
+</html>
