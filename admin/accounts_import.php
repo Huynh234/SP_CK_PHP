@@ -162,7 +162,7 @@ $user = current_user();
         echo '</div>';
       }
       ?>
-      
+
       <form method="post" enctype="multipart/form-data" class="bg-white border border-slate-200 rounded-xl p-6 space-y-4">
         <?php echo csrf_field(); ?>
         <div>

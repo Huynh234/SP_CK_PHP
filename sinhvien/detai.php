@@ -14,22 +14,17 @@ if (!$dot) {
 }
 $lop_id = $dot['lop_id'];
 
-// Xác nhận sinh viên thuộc lớp
-$thuocLop = db_query_one('SELECT id FROM lop_sinhvien WHERE lop_id=? AND sinhvien_id=?', [$lop_id, $sv_id]);
-if (!$thuocLop) {
-  set_flash('error', 'Bạn không thuộc lớp này.');
-  redirect('/sinhvien/dashboard.php');
-}
-
 // Nhóm của tôi trong lớp này
 $nhom = db_query_one("
     SELECT n.* FROM thanhvien_nhom tv JOIN nhom n ON n.id=tv.nhom_id
     WHERE tv.sinhvien_id=? AND tv.trang_thai='da_xac_nhan' AND n.lop_id=?
 ", [$sv_id, $lop_id]);
+
 if (!$nhom) {
   set_flash('error', 'Bạn chưa có nhóm trong lớp này.');
   redirect('/sinhvien/lop.php?id=' . $lop_id);
 }
+
 if ($nhom['truong_nhom_id'] != $sv_id) {
   set_flash('error', 'Chỉ trưởng nhóm được đăng ký đề tài.');
   redirect('/sinhvien/nhom.php?id=' . $nhom['id']);

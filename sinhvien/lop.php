@@ -35,9 +35,9 @@ if (isset($_POST['add_nhom'])) {
   }
 
   $ten = trim($_POST['ten_nhom']) ?: ($_SESSION['ho_ten'] . "'s Group");
-  db_exec("INSERT INTO nhom (lop_id, ten_nhom, truong_nhom_id, nguon_tao) VALUES (?,?,?,'sinhvien')", [$id, $ten, $sv_id]);
+  db_exec("INSERT IGNORE INTO nhom (lop_id, ten_nhom, truong_nhom_id, nguon_tao) VALUES (?,?,?,'sinhvien')", [$id, $ten, $sv_id]);
   $nhomId = db_last_id();
-  db_exec("INSERT INTO thanhvien_nhom (nhom_id, sinhvien_id, trang_thai) VALUES (?,?,'da_xac_nhan')", [$nhomId, $sv_id]);
+  db_exec("INSERT IGNORE INTO thanhvien_nhom (nhom_id, sinhvien_id, trang_thai) VALUES (?,?,'da_xac_nhan')", [$nhomId, $sv_id]);
 
   set_flash('success', 'Đã tạo nhóm. Hãy mời thêm thành viên!');
   redirect('/sinhvien/nhom.php?id=' . $nhomId);

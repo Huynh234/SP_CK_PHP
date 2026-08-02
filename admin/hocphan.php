@@ -16,7 +16,7 @@ if (isset($_POST['add'])) {
     redirect('/admin/hocphan.php');
   }
   try {
-    db_exec('INSERT IGNORE INTO hocphan (ma_hp, ten_hp, so_tin_chi) VALUES (?,?,?)', [$ma, $ten, $tc ?: 3]);
+    db_exec('INSERT IGNORE INTO hocphan (ma_hp, ten_hp, so_tin_chi) VALUES (?,?,?)', [$ma, $ten, $tc]);
     set_flash('success', 'Đã thêm học phần.');
   } catch (mysqli_sql_exception $e) {
     set_flash('error', 'Mã học phần đã tồn tại.');

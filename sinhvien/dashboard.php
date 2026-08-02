@@ -112,9 +112,9 @@ $user = current_user();
           ? '<span class="text-xs px-2 py-1 rounded-full bg-emerald-50 text-emerald-700">✓ Đã có nhóm</span>'
           : '<span class="text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700">Chưa có nhóm</span>';
         echo '</div>';
-
+        echo '</div>';
         echo '</a>';
-      }
+      } 
       ?>
       <?php
       if (!$lops) {

@@ -48,10 +48,6 @@ if (isset($_POST['toggle_lock'])) {
 if (isset($_POST['delete'])) {
   csrf_check();
   $id = (int)$_POST['id'];
-  if ($id === (int)$_SESSION['user_id']) {
-    set_flash('error', 'Không thể tự xoá chính mình.');
-    redirect('/admin/accounts.php');
-  }
   db_exec('DELETE FROM users WHERE id=?', [$id]);
   set_flash('success', 'Đã xoá tài khoản.');
   redirect('/admin/accounts.php');

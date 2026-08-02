@@ -15,7 +15,6 @@ if (isset($_POST['add_class'])) {
   $si_min = (int)$_POST['si_so_nhom_toi_thieu'];
   $si_max = (int)$_POST['si_so_nhom_toi_da'];
   $han_nhom = $_POST['han_dang_ky_nhom'] !== '' ? $_POST['han_dang_ky_nhom'] : null;
-
   $sv_ids = $_POST['sv_id'] ?? [];
 
   if ($ma === '' || $ten === '' || !$hp_id) {
@@ -26,7 +25,7 @@ if (isset($_POST['add_class'])) {
     db_exec(
       'INSERT INTO lop_hocphan (ma_lop, ten_lop, hocphan_id, giangvien_id, hoc_ky, si_so_nhom_toi_thieu, si_so_nhom_toi_da, han_dang_ky_nhom)
             VALUES (?,?,?,?,?,?,?,?)',
-      [$ma, $ten, $hp_id, $gv_id, $hoc_ky, $si_min ?: 2, $si_max ?: 5, $han_nhom]
+      [$ma, $ten, $hp_id, $gv_id, $hoc_ky, $si_min, $si_max, $han_nhom]
     );
     set_flash('success', 'Đã tạo lớp học phần.');
   } catch (mysqli_sql_exception $e) {

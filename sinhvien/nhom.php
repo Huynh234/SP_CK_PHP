@@ -53,7 +53,7 @@ if (isset($_POST['moi'])) {
   }
 
   try {
-    db_exec("INSERT INTO thanhvien_nhom (nhom_id, sinhvien_id, trang_thai) VALUES (?,?,'cho_xac_nhan')", [$id, $svMoiId]);
+    db_exec("INSERT IGNORE INTO thanhvien_nhom (nhom_id, sinhvien_id, trang_thai) VALUES (?,?,'cho_xac_nhan')", [$id, $svMoiId]);
     set_flash('success', 'Đã gửi lời mời. Chờ sinh viên chấp nhận.');
   } catch (mysqli_sql_exception $e) {
     set_flash('error', 'Sinh viên này đã được mời trước đó.');
